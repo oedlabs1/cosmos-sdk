@@ -24,6 +24,12 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg, metadat
 		return v1.Proposal{}, err
 	}
 
+	// assert title is no longer than predefined max length of metadata
+	err = keeper.assertMetadataLength(title)
+	if err != nil {
+		return v1.Proposal{}, err
+	}
+
 	// Will hold a comma-separated string of all Msg type URLs.
 	msgsStr := ""
 
@@ -78,7 +84,7 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg, metadat
 	submitTime := ctx.BlockHeader().Time
 	depositPeriod := keeper.GetParams(ctx).MaxDepositPeriod
 
-	proposal, err := v1.NewProposal(messages, proposalID, metadata, submitTime, submitTime.Add(*depositPeriod), title, summary, proposer)
+	proposal, err := v1.NewProposal(messages, proposalID, submitTime, submitTime.Add(*depositPeriod), metadata, title, summary, proposer)
 	if err != nil {
 		return v1.Proposal{}, err
 	}
