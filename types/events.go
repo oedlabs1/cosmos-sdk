@@ -16,7 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 )
 
-type EventManager interface {
+type EventManagerI interface {
 	Events() Events
 	ABCIEvents() []abci.Event
 	EmitTypedEvent(tev proto.Message) error
@@ -29,37 +29,37 @@ type EventManager interface {
 // Event Manager
 // ----------------------------------------------------------------------------
 
-// eventManager implements a simple wrapper around a slice of Event objects that
+// EventManager implements a simple wrapper around a slice of Event objects that
 // can be emitted from.
-type eventManager struct {
+type EventManager struct {
 	events Events
 }
 
-func NewEventManager() EventManager {
-	return &eventManager{EmptyEvents()}
+func NewEventManager() *EventManager {
+	return &EventManager{EmptyEvents()}
 }
 
-func (em *eventManager) Events() Events { return em.events }
+func (em *EventManager) Events() Events { return em.events }
 
 // EmitEvent stores a single Event object.
 // Deprecated: Use EmitTypedEvent
-func (em *eventManager) EmitEvent(event Event) {
+func (em *EventManager) EmitEvent(event Event) {
 	em.events = em.events.AppendEvent(event)
 }
 
 // EmitEvents stores a series of Event objects.
 // Deprecated: Use EmitTypedEvents
-func (em *eventManager) EmitEvents(events Events) {
+func (em *EventManager) EmitEvents(events Events) {
 	em.events = em.events.AppendEvents(events)
 }
 
 // ABCIEvents returns all stored Event objects as abci.Event objects.
-func (em eventManager) ABCIEvents() []abci.Event {
+func (em EventManager) ABCIEvents() []abci.Event {
 	return em.events.ToABCIEvents()
 }
 
 // EmitTypedEvent takes typed event and emits converting it into Event
-func (em *eventManager) EmitTypedEvent(tev proto.Message) error {
+func (em *EventManager) EmitTypedEvent(tev proto.Message) error {
 	event, err := TypedEventToEvent(tev)
 	if err != nil {
 		return err
@@ -70,7 +70,7 @@ func (em *eventManager) EmitTypedEvent(tev proto.Message) error {
 }
 
 // EmitTypedEvents takes series of typed events and emit
-func (em *eventManager) EmitTypedEvents(tevs ...proto.Message) error {
+func (em *EventManager) EmitTypedEvents(tevs ...proto.Message) error {
 	events := make(Events, len(tevs))
 	for i, tev := range tevs {
 		res, err := TypedEventToEvent(tev)
