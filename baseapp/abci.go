@@ -365,6 +365,7 @@ func (app *BaseApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
 		return sdkerrors.ResponseCheckTxWithEvents(err, gInfo.GasWanted, gInfo.GasUsed, anteEvents, app.trace)
 	}
 
+	fmt.Println("CHECK TX, RESULT: ", result, "ERROR", err)
 	return abci.ResponseCheckTx{
 		GasWanted: int64(gInfo.GasWanted), // TODO: Should type accept unsigned ints?
 		GasUsed:   int64(gInfo.GasUsed),   // TODO: Should type accept unsigned ints?
@@ -404,6 +405,8 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) (res abci.ResponseDeliv
 		resultStr = "failed"
 		return sdkerrors.ResponseDeliverTxWithEvents(err, gInfo.GasWanted, gInfo.GasUsed, sdk.MarkEventsToIndex(anteEvents, app.indexEvents), app.trace)
 	}
+
+	fmt.Println("DELIVER TX, RESULT: ", result, "ERROR", err)
 
 	return abci.ResponseDeliverTx{
 		GasWanted: int64(gInfo.GasWanted), // TODO: Should type accept unsigned ints?

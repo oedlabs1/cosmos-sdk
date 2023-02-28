@@ -29,7 +29,7 @@ func makeSignModeHandler(modes []signingtypes.SignMode, txt *textual.SignModeHan
 		panic(fmt.Errorf("no sign modes enabled"))
 	}
 
-	handlers := make([]signing.SignModeHandler, len(modes)+len(customSignModes))
+	handlers := make([]signing.SignModeHandler, len(modes))
 
 	// handle cosmos-sdk defined sign modes
 	for i, mode := range modes {
@@ -43,13 +43,18 @@ func makeSignModeHandler(modes []signingtypes.SignMode, txt *textual.SignModeHan
 		case signingtypes.SignMode_SIGN_MODE_DIRECT_AUX:
 			handlers[i] = signModeDirectAuxHandler{}
 		default:
-			panic(fmt.Errorf("unsupported sign mode %+v", mode))
+			var doPanic = true
+			for j, h := range customSignModes {
+				if h.DefaultMode() == mode {
+					handlers[i] = customSignModes[j]
+					doPanic = false
+					break
+				}
+			}
+			if doPanic {
+				panic(fmt.Errorf("unsupported sign mode %+v", mode))
+			}
 		}
-	}
-
-	// add custom sign modes
-	for i, handler := range customSignModes {
-		handlers[i+len(modes)] = handler
 	}
 
 	return signing.NewSignModeHandlerMap(
