@@ -5,6 +5,7 @@
 package mock
 
 import (
+	context "context"
 	json "encoding/json"
 	reflect "reflect"
 
@@ -880,6 +881,7 @@ func (mr *MockEndBlockAppModuleMockRecorder) RegisterLegacyAminoCodec(arg0 inter
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterLegacyAminoCodec", reflect.TypeOf((*MockEndBlockAppModule)(nil).RegisterLegacyAminoCodec), arg0)
 }
 
+<<<<<<< HEAD
 // MockPrepareCheckStateAppModule is a mock of PrepareCheckStateAppModule interface.
 type MockPrepareCheckStateAppModule struct {
 	ctrl     *gomock.Controller
@@ -895,16 +897,57 @@ type MockPrepareCheckStateAppModuleMockRecorder struct {
 func NewMockPrepareCheckStateAppModule(ctrl *gomock.Controller) *MockPrepareCheckStateAppModule {
 	mock := &MockPrepareCheckStateAppModule{ctrl: ctrl}
 	mock.recorder = &MockPrepareCheckStateAppModuleMockRecorder{mock}
+=======
+// MockHasABCIEndblock is a mock of HasABCIEndblock interface.
+type MockHasABCIEndblock struct {
+	ctrl     *gomock.Controller
+	recorder *MockHasABCIEndblockMockRecorder
+}
+
+// MockHasABCIEndblockMockRecorder is the mock recorder for MockHasABCIEndblock.
+type MockHasABCIEndblockMockRecorder struct {
+	mock *MockHasABCIEndblock
+}
+
+// NewMockHasABCIEndblock creates a new mock instance.
+func NewMockHasABCIEndblock(ctrl *gomock.Controller) *MockHasABCIEndblock {
+	mock := &MockHasABCIEndblock{ctrl: ctrl}
+	mock.recorder = &MockHasABCIEndblockMockRecorder{mock}
+>>>>>>> main
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
+<<<<<<< HEAD
 func (m *MockPrepareCheckStateAppModule) EXPECT() *MockPrepareCheckStateAppModuleMockRecorder {
 	return m.recorder
 }
 
 // GetQueryCmd mocks base method.
 func (m *MockPrepareCheckStateAppModule) GetQueryCmd() *cobra.Command {
+=======
+func (m *MockHasABCIEndblock) EXPECT() *MockHasABCIEndblockMockRecorder {
+	return m.recorder
+}
+
+// EndBlock mocks base method.
+func (m *MockHasABCIEndblock) EndBlock(arg0 context.Context) ([]types.ValidatorUpdate, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "EndBlock", arg0)
+	ret0, _ := ret[0].([]types.ValidatorUpdate)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// EndBlock indicates an expected call of EndBlock.
+func (mr *MockHasABCIEndblockMockRecorder) EndBlock(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EndBlock", reflect.TypeOf((*MockHasABCIEndblock)(nil).EndBlock), arg0)
+}
+
+// GetQueryCmd mocks base method.
+func (m *MockHasABCIEndblock) GetQueryCmd() *cobra.Command {
+>>>>>>> main
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetQueryCmd")
 	ret0, _ := ret[0].(*cobra.Command)
@@ -912,6 +955,7 @@ func (m *MockPrepareCheckStateAppModule) GetQueryCmd() *cobra.Command {
 }
 
 // GetQueryCmd indicates an expected call of GetQueryCmd.
+<<<<<<< HEAD
 func (mr *MockPrepareCheckStateAppModuleMockRecorder) GetQueryCmd() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetQueryCmd", reflect.TypeOf((*MockPrepareCheckStateAppModule)(nil).GetQueryCmd))
@@ -919,6 +963,15 @@ func (mr *MockPrepareCheckStateAppModuleMockRecorder) GetQueryCmd() *gomock.Call
 
 // GetTxCmd mocks base method.
 func (m *MockPrepareCheckStateAppModule) GetTxCmd() *cobra.Command {
+=======
+func (mr *MockHasABCIEndblockMockRecorder) GetQueryCmd() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetQueryCmd", reflect.TypeOf((*MockHasABCIEndblock)(nil).GetQueryCmd))
+}
+
+// GetTxCmd mocks base method.
+func (m *MockHasABCIEndblock) GetTxCmd() *cobra.Command {
+>>>>>>> main
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetTxCmd")
 	ret0, _ := ret[0].(*cobra.Command)
@@ -926,6 +979,7 @@ func (m *MockPrepareCheckStateAppModule) GetTxCmd() *cobra.Command {
 }
 
 // GetTxCmd indicates an expected call of GetTxCmd.
+<<<<<<< HEAD
 func (mr *MockPrepareCheckStateAppModuleMockRecorder) GetTxCmd() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTxCmd", reflect.TypeOf((*MockPrepareCheckStateAppModule)(nil).GetTxCmd))
@@ -933,6 +987,15 @@ func (mr *MockPrepareCheckStateAppModuleMockRecorder) GetTxCmd() *gomock.Call {
 
 // Name mocks base method.
 func (m *MockPrepareCheckStateAppModule) Name() string {
+=======
+func (mr *MockHasABCIEndblockMockRecorder) GetTxCmd() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTxCmd", reflect.TypeOf((*MockHasABCIEndblock)(nil).GetTxCmd))
+}
+
+// Name mocks base method.
+func (m *MockHasABCIEndblock) Name() string {
+>>>>>>> main
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Name")
 	ret0, _ := ret[0].(string)
@@ -940,6 +1003,7 @@ func (m *MockPrepareCheckStateAppModule) Name() string {
 }
 
 // Name indicates an expected call of Name.
+<<<<<<< HEAD
 func (mr *MockPrepareCheckStateAppModuleMockRecorder) Name() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Name", reflect.TypeOf((*MockPrepareCheckStateAppModule)(nil).Name))
@@ -959,11 +1023,21 @@ func (mr *MockPrepareCheckStateAppModuleMockRecorder) PrepareCheckState(arg0 int
 
 // RegisterGRPCGatewayRoutes mocks base method.
 func (m *MockPrepareCheckStateAppModule) RegisterGRPCGatewayRoutes(arg0 client.Context, arg1 *runtime.ServeMux) {
+=======
+func (mr *MockHasABCIEndblockMockRecorder) Name() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Name", reflect.TypeOf((*MockHasABCIEndblock)(nil).Name))
+}
+
+// RegisterGRPCGatewayRoutes mocks base method.
+func (m *MockHasABCIEndblock) RegisterGRPCGatewayRoutes(arg0 client.Context, arg1 *runtime.ServeMux) {
+>>>>>>> main
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "RegisterGRPCGatewayRoutes", arg0, arg1)
 }
 
 // RegisterGRPCGatewayRoutes indicates an expected call of RegisterGRPCGatewayRoutes.
+<<<<<<< HEAD
 func (mr *MockPrepareCheckStateAppModuleMockRecorder) RegisterGRPCGatewayRoutes(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterGRPCGatewayRoutes", reflect.TypeOf((*MockPrepareCheckStateAppModule)(nil).RegisterGRPCGatewayRoutes), arg0, arg1)
@@ -971,11 +1045,21 @@ func (mr *MockPrepareCheckStateAppModuleMockRecorder) RegisterGRPCGatewayRoutes(
 
 // RegisterInterfaces mocks base method.
 func (m *MockPrepareCheckStateAppModule) RegisterInterfaces(arg0 types0.InterfaceRegistry) {
+=======
+func (mr *MockHasABCIEndblockMockRecorder) RegisterGRPCGatewayRoutes(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterGRPCGatewayRoutes", reflect.TypeOf((*MockHasABCIEndblock)(nil).RegisterGRPCGatewayRoutes), arg0, arg1)
+}
+
+// RegisterInterfaces mocks base method.
+func (m *MockHasABCIEndblock) RegisterInterfaces(arg0 types0.InterfaceRegistry) {
+>>>>>>> main
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "RegisterInterfaces", arg0)
 }
 
 // RegisterInterfaces indicates an expected call of RegisterInterfaces.
+<<<<<<< HEAD
 func (mr *MockPrepareCheckStateAppModuleMockRecorder) RegisterInterfaces(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterInterfaces", reflect.TypeOf((*MockPrepareCheckStateAppModule)(nil).RegisterInterfaces), arg0)
@@ -983,11 +1067,21 @@ func (mr *MockPrepareCheckStateAppModuleMockRecorder) RegisterInterfaces(arg0 in
 
 // RegisterLegacyAminoCodec mocks base method.
 func (m *MockPrepareCheckStateAppModule) RegisterLegacyAminoCodec(arg0 *codec.LegacyAmino) {
+=======
+func (mr *MockHasABCIEndblockMockRecorder) RegisterInterfaces(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterInterfaces", reflect.TypeOf((*MockHasABCIEndblock)(nil).RegisterInterfaces), arg0)
+}
+
+// RegisterLegacyAminoCodec mocks base method.
+func (m *MockHasABCIEndblock) RegisterLegacyAminoCodec(arg0 *codec.LegacyAmino) {
+>>>>>>> main
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "RegisterLegacyAminoCodec", arg0)
 }
 
 // RegisterLegacyAminoCodec indicates an expected call of RegisterLegacyAminoCodec.
+<<<<<<< HEAD
 func (mr *MockPrepareCheckStateAppModuleMockRecorder) RegisterLegacyAminoCodec(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterLegacyAminoCodec", reflect.TypeOf((*MockPrepareCheckStateAppModule)(nil).RegisterLegacyAminoCodec), arg0)
@@ -1104,4 +1198,9 @@ func (m *MockPrecommitAppModule) RegisterLegacyAminoCodec(arg0 *codec.LegacyAmin
 func (mr *MockPrecommitAppModuleMockRecorder) RegisterLegacyAminoCodec(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterLegacyAminoCodec", reflect.TypeOf((*MockPrecommitAppModule)(nil).RegisterLegacyAminoCodec), arg0)
+=======
+func (mr *MockHasABCIEndblockMockRecorder) RegisterLegacyAminoCodec(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterLegacyAminoCodec", reflect.TypeOf((*MockHasABCIEndblock)(nil).RegisterLegacyAminoCodec), arg0)
+>>>>>>> main
 }
