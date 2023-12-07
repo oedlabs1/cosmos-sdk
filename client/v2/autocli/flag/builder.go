@@ -23,12 +23,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/runtime"
 )
 
-const (
-	AddressStringScalarType          = "cosmos.AddressString"
-	ValidatorAddressStringScalarType = "cosmos.ValidatorAddressString"
-	ConsensusAddressStringScalarType = "cosmos.ConsensusAddressString"
-)
-
 // Builder manages options for building pflag flags for protobuf messages.
 type Builder struct {
 	// TypeResolver specifies how protobuf types will be resolved. If it is
@@ -67,9 +61,9 @@ func (b *Builder) init() {
 
 	if b.scalarFlagTypes == nil {
 		b.scalarFlagTypes = map[string]Type{}
-		b.scalarFlagTypes[AddressStringScalarType] = addressStringType{}
-		b.scalarFlagTypes[ValidatorAddressStringScalarType] = validatorAddressStringType{}
-		b.scalarFlagTypes[ConsensusAddressStringScalarType] = consensusAddressStringType{}
+		b.scalarFlagTypes["cosmos.AddressString"] = addressStringType{}
+		b.scalarFlagTypes["cosmos.ValidatorAddressString"] = validatorAddressStringType{}
+		b.scalarFlagTypes["cosmos.ConsensusAddressString"] = consensusAddressStringType{}
 	}
 }
 
@@ -214,10 +208,10 @@ func (b *Builder) addMessageFlags(ctx context.Context, flagSet *pflag.FlagSet, m
 
 		flagOpts := commandOptions.FlagOptions[string(field.Name())]
 		name, hasValue, err := b.addFieldFlag(ctx, flagSet, field, flagOpts, options)
+		flagOptsByFlagName[name] = flagOpts
 		if err != nil {
 			return nil, err
 		}
-		flagOptsByFlagName[name] = flagOpts
 
 		messageBinder.flagBindings = append(messageBinder.flagBindings, fieldBinding{
 			hasValue: hasValue,
@@ -393,10 +387,10 @@ func (b *Builder) resolveFlagType(field protoreflect.FieldDescriptor) Type {
 }
 
 func (b *Builder) resolveFlagTypeBasic(field protoreflect.FieldDescriptor) Type {
-	scalar, ok := GetScalarType(field)
-	if ok {
+	scalar := proto.GetExtension(field.Options(), cosmos_proto.E_Scalar)
+	if scalar != nil {
 		b.init()
-		if typ, ok := b.scalarFlagTypes[scalar]; ok {
+		if typ, ok := b.scalarFlagTypes[scalar.(string)]; ok {
 			return typ
 		}
 	}
@@ -417,13 +411,6 @@ func (b *Builder) resolveFlagTypeBasic(field protoreflect.FieldDescriptor) Type 
 	default:
 		return nil
 	}
-}
-
-// GetScalarType gets scalar type of a field.
-func GetScalarType(field protoreflect.FieldDescriptor) (string, bool) {
-	scalar := proto.GetExtension(field.Options(), cosmos_proto.E_Scalar)
-	scalarStr, ok := scalar.(string)
-	return scalarStr, ok
 }
 
 // GetSignerFieldName gets signer field name of a message.

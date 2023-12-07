@@ -881,8 +881,7 @@ func ParseCoinNormalized(coinStr string) (coin Coin, err error) {
 		return Coin{}, err
 	}
 
-	coin, _ = NewDecCoinFromDec(decCoin.Denom, decCoin.Amount).TruncateDecimal()
-
+	coin, _ = NormalizeDecCoin(decCoin).TruncateDecimal()
 	return coin, nil
 }
 
@@ -900,21 +899,4 @@ func ParseCoinsNormalized(coinStr string) (Coins, error) {
 		return Coins{}, err
 	}
 	return NormalizeCoins(coins), nil
-}
-
-// ----------------------------------------------------------------------------
-
-// NormalizeCoins normalize and truncate a list of decimal coins
-func NormalizeCoins(coins []DecCoin) Coins {
-	if coins == nil {
-		return nil
-	}
-	result := make([]Coin, 0, len(coins))
-
-	for _, coin := range coins {
-		newCoin, _ := NewDecCoinFromDec(coin.Denom, coin.Amount).TruncateDecimal()
-		result = append(result, newCoin)
-	}
-
-	return result
 }

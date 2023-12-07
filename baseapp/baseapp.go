@@ -6,7 +6,6 @@ import (
 	"math"
 	"sort"
 	"strconv"
-	"sync"
 
 	"github.com/cockroachdb/errors"
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -60,7 +59,6 @@ var _ servertypes.ABCI = (*BaseApp)(nil)
 // BaseApp reflects the ABCI application implementation.
 type BaseApp struct {
 	// initialized on creation
-	mu                sync.Mutex // mu protects the fields below.
 	logger            log.Logger
 	name              string                      // application name from abci.BlockInfo
 	db                dbm.DB                      // common DB backend
@@ -91,7 +89,6 @@ type BaseApp struct {
 	addrPeerFilter sdk.PeerFilter // filter peers by address and port
 	idPeerFilter   sdk.PeerFilter // filter peers by node ID
 	fauxMerkleMode bool           // if true, IAVL MountStores uses MountStoresDB for simulation speed.
-	sigverifyTx    bool           // in the simulation test, since the account does not have a private key, we have to ignore the tx sigverify.
 
 	// manages snapshots, i.e. dumps of app state at certain intervals
 	snapshotManager *snapshots.Manager
@@ -201,7 +198,6 @@ func NewBaseApp(
 		msgServiceRouter: NewMsgServiceRouter(),
 		txDecoder:        txDecoder,
 		fauxMerkleMode:   false,
-		sigverifyTx:      true,
 		queryGasLimit:    math.MaxUint64,
 	}
 
@@ -410,11 +406,6 @@ func (app *BaseApp) AnteHandler() sdk.AnteHandler {
 	return app.anteHandler
 }
 
-// Mempool returns the Mempool of the app.
-func (app *BaseApp) Mempool() mempool.Mempool {
-	return app.mempool
-}
-
 // Init initializes the app. It seals the app, preventing any
 // further modifications. In addition, it validates the app against
 // the earlier provided settings. Returns an error if validation fails.
@@ -522,11 +513,7 @@ func (app *BaseApp) GetConsensusParams(ctx sdk.Context) cmtproto.ConsensusParams
 
 	cp, err := app.paramStore.Get(ctx)
 	if err != nil {
-		// This could happen while migrating from v0.45/v0.46 to v0.50, we should
-		// allow it to happen so during preblock the upgrade plan can be executed
-		// and the consensus params set for the first time in the new format.
-		app.logger.Error("failed to get consensus params", "err", err)
-		return cmtproto.ConsensusParams{}
+		panic(fmt.Errorf("consensus key is nil: %w", err))
 	}
 
 	return cp
@@ -647,9 +634,6 @@ func (app *BaseApp) getBlockGasMeter(ctx sdk.Context) storetypes.GasMeter {
 
 // retrieve the context for the tx w/ txBytes and other memoized values.
 func (app *BaseApp) getContextForTx(mode execMode, txBytes []byte) sdk.Context {
-	app.mu.Lock()
-	defer app.mu.Unlock()
-
 	modeState := app.getState(mode)
 	if modeState == nil {
 		panic(fmt.Sprintf("state is nil for mode %v", mode))
@@ -657,8 +641,6 @@ func (app *BaseApp) getContextForTx(mode execMode, txBytes []byte) sdk.Context {
 	ctx := modeState.ctx.
 		WithTxBytes(txBytes)
 	// WithVoteInfos(app.voteInfos) // TODO: identify if this is needed
-
-	ctx = ctx.WithIsSigverifyTx(app.sigverifyTx)
 
 	ctx = ctx.WithConsensusParams(app.GetConsensusParams(ctx))
 
@@ -938,25 +920,24 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 	if err == nil {
 		result, err = app.runMsgs(runMsgCtx, msgs, msgsV2, mode)
 	}
+	if err == nil {
+		// Run optional postHandlers.
+		//
+		// Note: If the postHandler fails, we also revert the runMsgs state.
+		if app.postHandler != nil {
+			// The runMsgCtx context currently contains events emitted by the ante handler.
+			// We clear this to correctly order events without duplicates.
+			// Note that the state is still preserved.
+			postCtx := runMsgCtx.WithEventManager(sdk.NewEventManager())
 
-	// Run optional postHandlers (should run regardless of the execution result).
-	//
-	// Note: If the postHandler fails, we also revert the runMsgs state.
-	if app.postHandler != nil {
-		// The runMsgCtx context currently contains events emitted by the ante handler.
-		// We clear this to correctly order events without duplicates.
-		// Note that the state is still preserved.
-		postCtx := runMsgCtx.WithEventManager(sdk.NewEventManager())
+			newCtx, err := app.postHandler(postCtx, tx, mode == execModeSimulate, err == nil)
+			if err != nil {
+				return gInfo, nil, anteEvents, err
+			}
 
-		newCtx, err := app.postHandler(postCtx, tx, mode == execModeSimulate, err == nil)
-		if err != nil {
-			return gInfo, nil, anteEvents, err
+			result.Events = append(result.Events, newCtx.EventManager().ABCIEvents()...)
 		}
 
-		result.Events = append(result.Events, newCtx.EventManager().ABCIEvents()...)
-	}
-
-	if err == nil {
 		if mode == execModeFinalize {
 			// When block gas exceeds, it'll panic and won't commit the cached store.
 			consumeBlockGas()

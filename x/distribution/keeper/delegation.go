@@ -7,9 +7,10 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
-	"cosmossdk.io/x/distribution/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/distribution/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // initialize starting info for a new delegation
@@ -46,7 +47,7 @@ func (k Keeper) initializeDelegation(ctx context.Context, val sdk.ValAddress, de
 }
 
 // calculate the rewards accrued by a delegation between two periods
-func (k Keeper) calculateDelegationRewardsBetween(ctx context.Context, val sdk.ValidatorI,
+func (k Keeper) calculateDelegationRewardsBetween(ctx context.Context, val stakingtypes.ValidatorI,
 	startingPeriod, endingPeriod uint64, stake math.LegacyDec,
 ) (sdk.DecCoins, error) {
 	// sanity check
@@ -85,7 +86,7 @@ func (k Keeper) calculateDelegationRewardsBetween(ctx context.Context, val sdk.V
 }
 
 // calculate the total rewards accrued by a delegation
-func (k Keeper) CalculateDelegationRewards(ctx context.Context, val sdk.ValidatorI, del sdk.DelegationI, endingPeriod uint64) (rewards sdk.DecCoins, err error) {
+func (k Keeper) CalculateDelegationRewards(ctx context.Context, val stakingtypes.ValidatorI, del stakingtypes.DelegationI, endingPeriod uint64) (rewards sdk.DecCoins, err error) {
 	addrCodec := k.authKeeper.AddressCodec()
 	delAddr, err := addrCodec.StringToBytes(del.GetDelegatorAddr())
 	if err != nil {
@@ -195,7 +196,7 @@ func (k Keeper) CalculateDelegationRewards(ctx context.Context, val sdk.Validato
 	return rewards, nil
 }
 
-func (k Keeper) withdrawDelegationRewards(ctx context.Context, val sdk.ValidatorI, del sdk.DelegationI) (sdk.Coins, error) {
+func (k Keeper) withdrawDelegationRewards(ctx context.Context, val stakingtypes.ValidatorI, del stakingtypes.DelegationI) (sdk.Coins, error) {
 	addrCodec := k.authKeeper.AddressCodec()
 	delAddr, err := addrCodec.StringToBytes(del.GetDelegatorAddr())
 	if err != nil {
@@ -247,7 +248,7 @@ func (k Keeper) withdrawDelegationRewards(ctx context.Context, val sdk.Validator
 		)
 	}
 
-	// truncate reward dec coins, return remainder to decimal pool
+	// truncate reward dec coins, return remainder to community pool
 	finalRewards, remainder := rewards.TruncateDecimal()
 
 	// add coins to user account
@@ -263,8 +264,10 @@ func (k Keeper) withdrawDelegationRewards(ctx context.Context, val sdk.Validator
 		}
 	}
 
-	// update the outstanding rewards and the decimal pool only if the transaction was successful
-	if err := k.ValidatorOutstandingRewards.Set(ctx, sdk.ValAddress(valAddr), types.ValidatorOutstandingRewards{Rewards: outstanding.Sub(rewards)}); err != nil {
+	// update the outstanding rewards and the community pool only if the
+	// transaction was successful
+	err = k.ValidatorOutstandingRewards.Set(ctx, sdk.ValAddress(valAddr), types.ValidatorOutstandingRewards{Rewards: outstanding.Sub(rewards)})
+	if err != nil {
 		return nil, err
 	}
 
@@ -273,7 +276,7 @@ func (k Keeper) withdrawDelegationRewards(ctx context.Context, val sdk.Validator
 		return nil, err
 	}
 
-	feePool.DecimalPool = feePool.DecimalPool.Add(remainder...)
+	feePool.CommunityPool = feePool.CommunityPool.Add(remainder...)
 	err = k.FeePool.Set(ctx, feePool)
 	if err != nil {
 		return nil, err
@@ -298,9 +301,9 @@ func (k Keeper) withdrawDelegationRewards(ctx context.Context, val sdk.Validator
 	}
 
 	if finalRewards.IsZero() {
-		baseDenom, err := k.stakingKeeper.BondDenom(ctx)
-		if err != nil {
-			return nil, err
+		baseDenom, _ := sdk.GetBaseDenom()
+		if baseDenom == "" {
+			baseDenom = sdk.DefaultBondDenom
 		}
 
 		// Note, we do not call the NewCoins constructor as we do not want the zero

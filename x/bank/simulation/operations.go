@@ -3,9 +3,6 @@ package simulation
 import (
 	"math/rand"
 
-	"cosmossdk.io/x/bank/keeper"
-	"cosmossdk.io/x/bank/types"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -13,6 +10,8 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	"github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
@@ -175,7 +174,7 @@ func sendMsgSend(
 		return err
 	}
 
-	_, _, err = app.SimDeliver(txGen.TxEncoder(), tx)
+	_, _, err = app.SimTxFinalizeBlock(txGen.TxEncoder(), tx)
 	if err != nil {
 		return err
 	}
@@ -391,7 +390,7 @@ func sendMsgMultiSend(
 	if err != nil {
 		return err
 	}
-	_, _, err = app.SimDeliver(txGen.TxEncoder(), tx)
+	_, _, err = app.SimTxFinalizeBlock(txGen.TxEncoder(), tx)
 	if err != nil {
 		return err
 	}

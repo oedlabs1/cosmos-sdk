@@ -3,7 +3,7 @@ package authz
 import (
 	"context"
 
-	"cosmossdk.io/x/authz/keeper"
+	"github.com/cosmos/cosmos-sdk/x/authz/keeper"
 )
 
 // BeginBlocker is called at the beginning of every block

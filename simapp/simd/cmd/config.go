@@ -15,9 +15,6 @@ import (
 func initCometBFTConfig() *cmtcfg.Config {
 	cfg := cmtcfg.DefaultConfig()
 
-	// only display only error logs by default except for p2p and state
-	cfg.LogLevel = "*:error,p2p:info,state:info"
-
 	// these values put a higher strain on node memory
 	// cfg.P2P.MaxNumInboundPeers = 100
 	// cfg.P2P.MaxNumOutboundPeers = 40
@@ -73,18 +70,19 @@ gas-adjustment = {{ .GasConfig.GasAdjustment }}
 func initAppConfig() (string, interface{}) {
 	// The following code snippet is just for reference.
 
-	// CustomConfig defines an arbitrary custom config to extend app.toml.
-	// If you don't need it, you can remove it.
-	// If you wish to add fields that correspond to flags that aren't in the SDK server config,
-	// this custom config can as well help.
-	type CustomConfig struct {
-		CustomField string `mapstructure:"custom-field"`
+	// WASMConfig defines configuration for the wasm module.
+	type WASMConfig struct {
+		// This is the maximum sdk gas (wasm and storage) that we allow for any x/wasm "smart" queries
+		QueryGasLimit uint64 `mapstructure:"query-gas-limit"`
+
+		// Address defines the gRPC-web server to listen on
+		LruSize uint64 `mapstructure:"lru-size"`
 	}
 
 	type CustomAppConfig struct {
 		serverconfig.Config `mapstructure:",squash"`
 
-		Custom CustomConfig `mapstructure:"custom"`
+		WASM WASMConfig `mapstructure:"wasm"`
 	}
 
 	// Optionally allow the chain developer to overwrite the SDK's default
@@ -108,8 +106,9 @@ func initAppConfig() (string, interface{}) {
 	// Now we set the custom config default values.
 	customAppConfig := CustomAppConfig{
 		Config: *srvCfg,
-		Custom: CustomConfig{
-			CustomField: "anything",
+		WASM: WASMConfig{
+			LruSize:       1,
+			QueryGasLimit: 300000,
 		},
 	}
 
@@ -117,10 +116,12 @@ func initAppConfig() (string, interface{}) {
 	// We append the custom config template to the default one.
 	// And we set the default config to the custom app template.
 	customAppTemplate := serverconfig.DefaultConfigTemplate + `
-[custom]
-# That field will be parsed by server.InterceptConfigsPreRunHandler and held by viper.
-# Do not forget to add quotes around the value if it is a string.
-custom-field = "{{ .Custom.CustomField }}"`
+[wasm]
+# This is the maximum sdk gas (wasm and storage) that we allow for any x/wasm "smart" queries
+query-gas-limit = {{ .WASM.QueryGasLimit }}
+# This is the number of wasm vm instances we keep cached in memory for speed-up
+# Warning: this is currently unstable and may lead to crashes, best to keep for 0 unless testing locally
+lru-size = {{ .WASM.LruSize }}`
 
 	return customAppTemplate, customAppConfig
 }

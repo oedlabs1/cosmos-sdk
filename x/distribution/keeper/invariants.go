@@ -4,9 +4,10 @@ import (
 	"fmt"
 
 	"cosmossdk.io/collections"
-	"cosmossdk.io/x/distribution/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/distribution/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // register all distribution invariants
@@ -89,7 +90,7 @@ func CanWithdrawInvariant(k Keeper) sdk.Invariant {
 		}
 
 		// iterate over all validators
-		err = k.stakingKeeper.IterateValidators(ctx, func(_ int64, val sdk.ValidatorI) (stop bool) {
+		err = k.stakingKeeper.IterateValidators(ctx, func(_ int64, val stakingtypes.ValidatorI) (stop bool) {
 			valBz, err1 := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(val.GetOperator())
 			if err != nil {
 				panic(err1)
@@ -131,7 +132,7 @@ func CanWithdrawInvariant(k Keeper) sdk.Invariant {
 func ReferenceCountInvariant(k Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
 		valCount := uint64(0)
-		err := k.stakingKeeper.IterateValidators(ctx, func(_ int64, val sdk.ValidatorI) (stop bool) {
+		err := k.stakingKeeper.IterateValidators(ctx, func(_ int64, val stakingtypes.ValidatorI) (stop bool) {
 			valCount++
 			return false
 		})
@@ -195,9 +196,16 @@ func ModuleAccountInvariant(k Keeper) sdk.Invariant {
 			return sdk.FormatInvariant(types.ModuleName, "module account coins", err.Error()), true
 		}
 
-		expectedInt, _ := expectedCoins.TruncateDecimal()
+		communityPool, err := k.FeePool.Get(ctx)
+		if err != nil {
+			panic(err)
+		}
 
-		balances := k.bankKeeper.GetAllBalances(ctx, k.GetDistributionAccount(ctx).GetAddress())
+		expectedInt, _ := expectedCoins.Add(communityPool.CommunityPool...).TruncateDecimal()
+
+		macc := k.GetDistributionAccount(ctx)
+		balances := k.bankKeeper.GetAllBalances(ctx, macc.GetAddress())
+
 		broken := !balances.Equal(expectedInt)
 		return sdk.FormatInvariant(
 			types.ModuleName, "ModuleAccount coins",

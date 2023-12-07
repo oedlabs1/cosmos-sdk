@@ -1,3 +1,0 @@
-# State Storage (SS)
-
-TODO

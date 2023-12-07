@@ -7,20 +7,20 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/log"
-	"cosmossdk.io/x/gov/keeper"
-	"cosmossdk.io/x/gov/types"
-	v1 "cosmossdk.io/x/gov/types/v1"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
+	"github.com/cosmos/cosmos-sdk/x/gov/types"
+	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
-// EndBlocker is called every block.
+// EndBlocker called every block, process inflation, update validator set.
 func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyEndBlocker)
 
-	logger := keeper.Logger(ctx)
+	logger := ctx.Logger().With("module", "x/"+types.ModuleName)
 	// delete dead proposals from store and returns theirs deposits.
 	// A proposal is dead when it's inactive and didn't get enough deposit on time to get into voting phase.
 	rng := collections.NewPrefixUntilPairRange[time.Time, uint64](ctx.HeaderInfo().Time)
@@ -65,13 +65,7 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 		}
 
 		// called when proposal become inactive
-		cacheCtx, writeCache := ctx.CacheContext()
-		err = keeper.Hooks().AfterProposalFailedMinDeposit(cacheCtx, proposal.Id)
-		if err == nil { // purposely ignoring the error here not to halt the chain if the hook fails
-			writeCache()
-		} else {
-			logger.Error("failed to execute AfterProposalFailedMinDeposit hook", "error", err)
-		}
+		keeper.Hooks().AfterProposalFailedMinDeposit(ctx, proposal.Id)
 
 		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(
@@ -234,13 +228,7 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 		}
 
 		// when proposal become active
-		cacheCtx, writeCache := ctx.CacheContext()
-		err = keeper.Hooks().AfterProposalVotingPeriodEnded(cacheCtx, proposal.Id)
-		if err == nil { // purposely ignoring the error here not to halt the chain if the hook fails
-			writeCache()
-		} else {
-			logger.Error("failed to execute AfterProposalVotingPeriodEnded hook", "error", err)
-		}
+		keeper.Hooks().AfterProposalVotingPeriodEnded(ctx, proposal.Id)
 
 		logger.Info(
 			"proposal tallied",

@@ -19,36 +19,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
-	sdkkeyring "github.com/cosmos/cosmos-sdk/crypto/keyring"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 )
-
-func getKeyring(chainName string) (sdkkeyring.Keyring, error) {
-	if chainName == "" {
-		chainName = config.GlobalKeyringDirName
-	}
-
-	registry := codectypes.NewInterfaceRegistry()
-	cryptocodec.RegisterInterfaces(registry)
-	cdc := codec.NewProtoCodec(registry)
-
-	configDir, err := config.GetConfigDir()
-	if err != nil {
-		return nil, err
-	}
-
-	cfg, err := config.Load(configDir)
-	if err != nil {
-		return nil, err
-	}
-
-	backend, err := cfg.GetKeyringBackend(chainName)
-	if err != nil {
-		return nil, err
-	}
-
-	keyringDir := path.Join(configDir, "keyring", chainName)
-	return sdkkeyring.New(chainName, backend, keyringDir, nil, cdc)
-}
 
 func KeyringCmd(chainName string) *cobra.Command {
 	shortDesc := fmt.Sprintf("Keyring management for %s", chainName)
@@ -91,7 +63,7 @@ func KeyringCmd(chainName string) *cobra.Command {
 
 			keyringDir := path.Join(configDir, "keyring", chainName)
 			inBuf := bufio.NewReader(cmd.InOrStdin())
-			kr, err := sdkkeyring.New(chainName, backend, keyringDir, inBuf, cdc)
+			kr, err := keyring.New(chainName, backend, keyringDir, inBuf, cdc)
 			if err != nil {
 				return err
 			}

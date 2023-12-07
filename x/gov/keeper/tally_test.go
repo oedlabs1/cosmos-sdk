@@ -10,13 +10,13 @@ import (
 
 	"cosmossdk.io/collections"
 	sdkmath "cosmossdk.io/math"
-	"cosmossdk.io/x/gov/keeper"
-	v1 "cosmossdk.io/x/gov/types/v1"
-	stakingtypes "cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
+	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func TestTally(t *testing.T) {
@@ -43,7 +43,7 @@ func TestTally(t *testing.T) {
 			s.mocks.stakingKeeper.EXPECT().
 				IterateDelegations(s.ctx, voter, gomock.Any()).
 				DoAndReturn(
-					func(ctx context.Context, voter sdk.AccAddress, fn func(index int64, d sdk.DelegationI) bool) error {
+					func(ctx context.Context, voter sdk.AccAddress, fn func(index int64, d stakingtypes.DelegationI) bool) error {
 						for i, d := range delegations {
 							fn(int64(i), d)
 						}
@@ -382,7 +382,7 @@ func TestTally(t *testing.T) {
 			mocks.stakingKeeper.EXPECT().
 				IterateBondedValidatorsByPower(ctx, gomock.Any()).
 				DoAndReturn(
-					func(ctx context.Context, fn func(index int64, validator sdk.ValidatorI) bool) error {
+					func(ctx context.Context, fn func(index int64, validator stakingtypes.ValidatorI) bool) error {
 						for i := int64(0); i < int64(numVals); i++ {
 							fn(i, stakingtypes.Validator{
 								OperatorAddress: valAddrs[i].String(),

@@ -104,8 +104,7 @@ type collValue2[T any, PT protoMessageV2[T]] struct {
 }
 
 func (c collValue2[T, PT]) Encode(value PT) ([]byte, error) {
-	protov2MarshalOpts := protov2.MarshalOptions{Deterministic: true}
-	return protov2MarshalOpts.Marshal(value)
+	return protov2.Marshal(value)
 }
 
 func (c collValue2[T, PT]) Decode(b []byte) (PT, error) {

@@ -13,10 +13,6 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 	store "cosmossdk.io/store/types"
-	"cosmossdk.io/x/group"
-	"cosmossdk.io/x/group/client/cli"
-	"cosmossdk.io/x/group/keeper"
-	"cosmossdk.io/x/group/simulation"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
@@ -25,6 +21,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/x/group"
+	"github.com/cosmos/cosmos-sdk/x/group/client/cli"
+	"github.com/cosmos/cosmos-sdk/x/group/keeper"
+	"github.com/cosmos/cosmos-sdk/x/group/simulation"
 )
 
 // ConsensusVersion defines the current x/group module consensus version.
@@ -206,17 +206,13 @@ type GroupOutputs struct {
 }
 
 func ProvideModule(in GroupInputs) GroupOutputs {
-	k := keeper.NewKeeper(in.Key,
-		in.Cdc,
-		in.MsgServiceRouter,
-		in.AccountKeeper,
-		group.Config{
-			MaxExecutionPeriod:    in.Config.MaxExecutionPeriod.AsDuration(),
-			MaxMetadataLen:        in.Config.MaxMetadataLen,
-			MaxProposalTitleLen:   in.Config.MaxProposalTitleLen,
-			MaxProposalSummaryLen: in.Config.MaxProposalSummaryLen,
-		},
-	)
+	/*
+		Example of setting group params:
+		in.Config.MaxMetadataLen = 1000
+		in.Config.MaxExecutionPeriod = "1209600s"
+	*/
+
+	k := keeper.NewKeeper(in.Key, in.Cdc, in.MsgServiceRouter, in.AccountKeeper, group.Config{MaxExecutionPeriod: in.Config.MaxExecutionPeriod.AsDuration(), MaxMetadataLen: in.Config.MaxMetadataLen})
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.Registry)
 	return GroupOutputs{GroupKeeper: k, Module: m}
 }

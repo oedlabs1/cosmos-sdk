@@ -10,13 +10,13 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/auth/ante"
 	"cosmossdk.io/x/feegrant"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 )
 
 // Keeper manages state of all fee grants, as well as calculating approval.
@@ -128,7 +128,7 @@ func (k Keeper) GrantAllowance(ctx context.Context, granter, grantee sdk.AccAddr
 
 // UpdateAllowance updates the existing grant.
 func (k Keeper) UpdateAllowance(ctx context.Context, granter, grantee sdk.AccAddress, feeAllowance feegrant.FeeAllowanceI) error {
-	_, err := k.GetAllowance(ctx, granter, grantee)
+	_, err := k.getGrant(ctx, granter, grantee)
 	if err != nil {
 		return err
 	}
@@ -215,6 +215,16 @@ func (k Keeper) GetAllowance(ctx context.Context, granter, grantee sdk.AccAddres
 	return grant.GetGrant()
 }
 
+// getGrant returns entire grant between both accounts
+func (k Keeper) getGrant(ctx context.Context, granter, grantee sdk.AccAddress) (*feegrant.Grant, error) {
+	feegrant, err := k.FeeAllowance.Get(ctx, collections.Join(grantee, granter))
+	if err != nil {
+		return nil, err
+	}
+
+	return &feegrant, nil
+}
+
 // IterateAllFeeAllowances iterates over all the grants in the store.
 // Callback to get all data, returns true to stop, false to keep reading
 // Calling this without pagination is very expensive and only designed for export genesis
@@ -235,7 +245,12 @@ func (k Keeper) IterateAllFeeAllowances(ctx context.Context, cb func(grant feegr
 
 // UseGrantedFees will try to pay the given fee from the granter's account as requested by the grantee
 func (k Keeper) UseGrantedFees(ctx context.Context, granter, grantee sdk.AccAddress, fee sdk.Coins, msgs []sdk.Msg) error {
-	grant, err := k.GetAllowance(ctx, granter, grantee)
+	f, err := k.getGrant(ctx, granter, grantee)
+	if err != nil {
+		return err
+	}
+
+	grant, err := f.GetGrant()
 	if err != nil {
 		return err
 	}
@@ -319,10 +334,9 @@ func (k Keeper) ExportGenesis(ctx context.Context) (*feegrant.GenesisState, erro
 }
 
 // RemoveExpiredAllowances iterates grantsByExpiryQueue and deletes the expired grants.
-func (k Keeper) RemoveExpiredAllowances(ctx context.Context, limit int) error {
+func (k Keeper) RemoveExpiredAllowances(ctx context.Context) error {
 	exp := sdk.UnwrapSDKContext(ctx).HeaderInfo().Time
 	rng := collections.NewPrefixUntilTripleRange[time.Time, sdk.AccAddress, sdk.AccAddress](exp)
-	count := 0
 
 	err := k.FeeAllowanceQueue.Walk(ctx, rng, func(key collections.Triple[time.Time, sdk.AccAddress, sdk.AccAddress], value bool) (stop bool, err error) {
 		grantee, granter := key.K2(), key.K3()
@@ -333,12 +347,6 @@ func (k Keeper) RemoveExpiredAllowances(ctx context.Context, limit int) error {
 
 		if err := k.FeeAllowanceQueue.Remove(ctx, key); err != nil {
 			return true, err
-		}
-
-		// limit the amount of iterations to avoid taking too much time
-		count++
-		if count == limit {
-			return true, nil
 		}
 
 		return false, nil

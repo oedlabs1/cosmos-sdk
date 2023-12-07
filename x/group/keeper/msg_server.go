@@ -9,15 +9,15 @@ import (
 	"strings"
 
 	errorsmod "cosmossdk.io/errors"
-	authtypes "cosmossdk.io/x/auth/types"
-	govtypes "cosmossdk.io/x/gov/types"
-	"cosmossdk.io/x/group"
-	"cosmossdk.io/x/group/errors"
-	"cosmossdk.io/x/group/internal/math"
-	"cosmossdk.io/x/group/internal/orm"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/cosmos/cosmos-sdk/x/group"
+	"github.com/cosmos/cosmos-sdk/x/group/errors"
+	"github.com/cosmos/cosmos-sdk/x/group/internal/math"
+	"github.com/cosmos/cosmos-sdk/x/group/internal/orm"
 )
 
 var _ group.MsgServer = Keeper{}
@@ -429,10 +429,6 @@ func (k Keeper) UpdateGroupPolicyAdmin(goCtx context.Context, msg *group.MsgUpda
 		return nil, errorsmod.Wrap(errors.ErrInvalid, "new and old admin are same")
 	}
 
-	if _, err := k.accKeeper.AddressCodec().StringToBytes(msg.NewAdmin); err != nil {
-		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidAddress, "new admin address")
-	}
-
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	action := func(groupPolicy *group.GroupPolicyInfo) error {
 		groupPolicy.Admin = msg.NewAdmin
@@ -521,7 +517,7 @@ func (k Keeper) SubmitProposal(goCtx context.Context, msg *group.MsgSubmitPropos
 		return nil, errorsmod.Wrap(err, "request account address of group policy")
 	}
 
-	if err := k.assertMetadataLength(msg.Metadata, "metadata"); err != nil {
+	if err := k.assertMetadataLength(msg.Title, "proposal Title"); err != nil {
 		return nil, err
 	}
 
@@ -529,7 +525,7 @@ func (k Keeper) SubmitProposal(goCtx context.Context, msg *group.MsgSubmitPropos
 		return nil, err
 	}
 
-	if err := k.assertTitleLength(msg.Title); err != nil {
+	if err := k.assertMetadataLength(msg.Metadata, "metadata"); err != nil {
 		return nil, err
 	}
 
@@ -1054,6 +1050,24 @@ func (k Keeper) doUpdateGroup(ctx sdk.Context, groupID uint64, reqGroupAdmin str
 		return err
 	}
 
+	return nil
+}
+
+// assertMetadataLength returns an error if given metadata length
+// is greater than a pre-defined maxMetadataLen.
+func (k Keeper) assertMetadataLength(metadata, description string) error {
+	if metadata != "" && uint64(len(metadata)) > k.config.MaxMetadataLen {
+		return errorsmod.Wrapf(errors.ErrMaxLimit, description)
+	}
+	return nil
+}
+
+// assertSummaryLength returns an error if given summary length
+// is greater than a pre-defined 40*MaxMetadataLen.
+func (k Keeper) assertSummaryLength(summary string) error {
+	if summary != "" && uint64(len(summary)) > 40*k.config.MaxMetadataLen {
+		return errorsmod.Wrapf(errors.ErrMaxLimit, "proposal summary is too long")
+	}
 	return nil
 }
 

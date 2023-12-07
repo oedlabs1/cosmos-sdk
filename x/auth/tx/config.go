@@ -3,7 +3,6 @@ package tx
 import (
 	"fmt"
 
-	authcodec "cosmossdk.io/x/auth/codec"
 	txsigning "cosmossdk.io/x/tx/signing"
 	"cosmossdk.io/x/tx/signing/aminojson"
 	"cosmossdk.io/x/tx/signing/direct"
@@ -14,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
+	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 )
 
 type config struct {
@@ -99,8 +99,9 @@ func NewDefaultSigningOptions() (*txsigning.Options, error) {
 // NewSigningHandlerMap returns a new txsigning.HandlerMap using the provided ConfigOptions.
 // It is recommended to use types.InterfaceRegistry in the field ConfigOptions.FileResolver as shown in
 // NewTxConfigWithOptions but this fn does not enforce it.
-func NewSigningHandlerMap(configOpts ConfigOptions) (*txsigning.HandlerMap, error) {
+func NewSigningHandlerMap(configOptions ConfigOptions) (*txsigning.HandlerMap, error) {
 	var err error
+	configOpts := &configOptions
 	if configOpts.SigningOptions == nil {
 		configOpts.SigningOptions, err = NewDefaultSigningOptions()
 		if err != nil {
@@ -186,25 +187,27 @@ func NewTxConfigWithOptions(protoCodec codec.Codec, configOptions ConfigOptions)
 	}
 
 	var err error
-	if configOptions.SigningContext == nil {
-		if configOptions.SigningOptions == nil {
-			configOptions.SigningOptions, err = NewDefaultSigningOptions()
+	opts := &configOptions
+	if opts.SigningContext == nil {
+		signingOpts := configOptions.SigningOptions
+		if signingOpts == nil {
+			signingOpts, err = NewDefaultSigningOptions()
 			if err != nil {
 				return nil, err
 			}
 		}
-		if configOptions.SigningOptions.FileResolver == nil {
-			configOptions.SigningOptions.FileResolver = protoCodec.InterfaceRegistry()
+		if signingOpts.FileResolver == nil {
+			signingOpts.FileResolver = protoCodec.InterfaceRegistry()
 		}
-		configOptions.SigningContext, err = txsigning.NewContext(*configOptions.SigningOptions)
+		opts.SigningContext, err = txsigning.NewContext(*signingOpts)
 		if err != nil {
 			return nil, err
 		}
 	}
-	txConfig.signingContext = configOptions.SigningContext
+	txConfig.signingContext = opts.SigningContext
 
-	if configOptions.SigningHandler != nil {
-		txConfig.handler = configOptions.SigningHandler
+	if opts.SigningHandler != nil {
+		txConfig.handler = opts.SigningHandler
 		return txConfig, nil
 	}
 

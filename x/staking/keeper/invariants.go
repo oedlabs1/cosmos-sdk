@@ -6,9 +6,9 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
-	"cosmossdk.io/x/staking/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // RegisterInvariants registers all staking invariants
@@ -58,11 +58,11 @@ func ModuleAccountInvariants(k *Keeper) sdk.Invariant {
 			panic(err)
 		}
 
-		err = k.IterateValidators(ctx, func(_ int64, validator sdk.ValidatorI) bool {
+		err = k.IterateValidators(ctx, func(_ int64, validator types.ValidatorI) bool {
 			switch validator.GetStatus() {
-			case sdk.Bonded:
+			case types.Bonded:
 				bonded = bonded.Add(validator.GetTokens())
-			case sdk.Unbonding, sdk.Unbonded:
+			case types.Unbonding, types.Unbonded:
 				notBonded = notBonded.Add(validator.GetTokens())
 			default:
 				panic("invalid validator status")

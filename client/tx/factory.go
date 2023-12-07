@@ -3,12 +3,12 @@ package tx
 import (
 	"errors"
 	"fmt"
-	"math/big"
 	"os"
 	"strings"
 
 	"github.com/cosmos/go-bip39"
 	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
 
 	"cosmossdk.io/math"
 
@@ -16,7 +16,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -35,7 +34,6 @@ type Factory struct {
 	timeoutHeight      uint64
 	gasAdjustment      float64
 	chainID            string
-	fromName           string
 	offline            bool
 	generateOnly       bool
 	memo               string
@@ -52,15 +50,17 @@ type Factory struct {
 // NewFactoryCLI creates a new Factory.
 func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) (Factory, error) {
 	if clientCtx.Viper == nil {
-		clientCtx = clientCtx.WithViper("")
+		clientCtx.Viper = viper.New()
 	}
 
 	if err := clientCtx.Viper.BindPFlags(flagSet); err != nil {
 		return Factory{}, fmt.Errorf("failed to bind flags to viper: %w", err)
 	}
 
+	signModeStr := clientCtx.SignModeStr
+
 	signMode := signing.SignMode_SIGN_MODE_UNSPECIFIED
-	switch clientCtx.SignModeStr {
+	switch signModeStr {
 	case flags.SignModeDirect:
 		signMode = signing.SignMode_SIGN_MODE_DIRECT
 	case flags.SignModeLegacyAminoJSON:
@@ -95,7 +95,6 @@ func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) (Factory, e
 		accountRetriever:   clientCtx.AccountRetriever,
 		keybase:            clientCtx.Keyring,
 		chainID:            clientCtx.ChainID,
-		fromName:           clientCtx.FromName,
 		offline:            clientCtx.Offline,
 		generateOnly:       clientCtx.GenerateOnly,
 		gas:                gasSetting.Gas,
@@ -312,9 +311,7 @@ func (f Factory) BuildUnsignedTx(msgs ...sdk.Msg) (client.TxBuilder, error) {
 			return nil, errors.New("cannot provide both fees and gas prices")
 		}
 
-		// f.gas is a uint64 and we should convert to LegacyDec
-		// without the risk of under/overflow via uint64->int64.
-		glDec := math.LegacyNewDecFromBigInt(new(big.Int).SetUint64(f.gas))
+		glDec := math.LegacyNewDec(int64(f.gas))
 
 		// Derive the fees based on the provided gas prices, where
 		// fee = ceil(gasPrice * gasLimit).
@@ -412,8 +409,10 @@ func (f Factory) BuildSimTx(msgs ...sdk.Msg) ([]byte, error) {
 	// Create an empty signature literal as the ante handler will populate with a
 	// sentinel pubkey.
 	sig := signing.SignatureV2{
-		PubKey:   pk,
-		Data:     f.getSimSignatureData(pk),
+		PubKey: pk,
+		Data: &signing.SingleSignatureData{
+			SignMode: f.signMode,
+		},
 		Sequence: f.Sequence(),
 	}
 	if err := txb.SetSignatures(sig); err != nil {
@@ -439,39 +438,22 @@ func (f Factory) getSimPK() (cryptotypes.PubKey, error) {
 		pk cryptotypes.PubKey = &secp256k1.PubKey{} // use default public key type
 	)
 
+	// Use the first element from the list of keys in order to generate a valid
+	// pubkey that supports multiple algorithms.
 	if f.simulateAndExecute && f.keybase != nil {
-		record, err := f.keybase.Key(f.fromName)
-		if err != nil {
-			return nil, err
+		records, _ := f.keybase.List()
+		if len(records) == 0 {
+			return nil, errors.New("cannot build signature for simulation, key records slice is empty")
 		}
 
-		pk, ok = record.PubKey.GetCachedValue().(cryptotypes.PubKey)
+		// take the first record just for simulation purposes
+		pk, ok = records[0].PubKey.GetCachedValue().(cryptotypes.PubKey)
 		if !ok {
 			return nil, errors.New("cannot build signature for simulation, failed to convert proto Any to public key")
 		}
 	}
 
 	return pk, nil
-}
-
-// getSimSignatureData based on the pubKey type gets the correct SignatureData type
-// to use for building a simulation tx.
-func (f Factory) getSimSignatureData(pk cryptotypes.PubKey) signing.SignatureData {
-	multisigPubKey, ok := pk.(*multisig.LegacyAminoPubKey)
-	if !ok {
-		return &signing.SingleSignatureData{SignMode: f.signMode}
-	}
-
-	multiSignatureData := make([]signing.SignatureData, 0, multisigPubKey.Threshold)
-	for i := uint32(0); i < multisigPubKey.Threshold; i++ {
-		multiSignatureData = append(multiSignatureData, &signing.SingleSignatureData{
-			SignMode: f.SignMode(),
-		})
-	}
-
-	return &signing.MultiSignatureData{
-		Signatures: multiSignatureData,
-	}
 }
 
 // Prepare ensures the account defined by ctx.GetFromAddress() exists and
@@ -485,7 +467,7 @@ func (f Factory) Prepare(clientCtx client.Context) (Factory, error) {
 	}
 
 	fc := f
-	from := clientCtx.FromAddress
+	from := clientCtx.GetFromAddress()
 
 	if err := fc.accountRetriever.EnsureExists(clientCtx, from); err != nil {
 		return fc, err

@@ -7,9 +7,10 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/math"
-	"cosmossdk.io/x/distribution/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/distribution/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // AllocateTokens performs reward and fee distribution to all validators based
@@ -23,19 +24,21 @@ func (k Keeper) AllocateTokens(ctx context.Context, totalPreviousPower int64, bo
 	feesCollected := sdk.NewDecCoinsFromCoins(feesCollectedInt...)
 
 	// transfer collected fees to the distribution module account
-	if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, k.feeCollectorName, types.ModuleName, feesCollectedInt); err != nil {
+	err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, k.feeCollectorName, types.ModuleName, feesCollectedInt)
+	if err != nil {
 		return err
 	}
 
+	// temporary workaround to keep CanWithdrawInvariant happy
+	// general discussions here: https://github.com/cosmos/cosmos-sdk/issues/2906#issuecomment-441867634
 	feePool, err := k.FeePool.Get(ctx)
 	if err != nil {
 		return err
 	}
 
 	if totalPreviousPower == 0 {
-		if err := k.FeePool.Set(ctx, types.FeePool{DecimalPool: feePool.DecimalPool.Add(feesCollected...)}); err != nil {
-			return err
-		}
+		feePool.CommunityPool = feePool.CommunityPool.Add(feesCollected...)
+		return k.FeePool.Set(ctx, feePool)
 	}
 
 	// calculate fraction allocated to validators
@@ -66,28 +69,22 @@ func (k Keeper) AllocateTokens(ctx context.Context, totalPreviousPower int64, bo
 		powerFraction := math.LegacyNewDec(vote.Validator.Power).QuoTruncate(math.LegacyNewDec(totalPreviousPower))
 		reward := feeMultiplier.MulDecTruncate(powerFraction)
 
-		if err = k.AllocateTokensToValidator(ctx, validator, reward); err != nil {
+		err = k.AllocateTokensToValidator(ctx, validator, reward)
+		if err != nil {
 			return err
 		}
 
 		remaining = remaining.Sub(reward)
 	}
-	// send to community pool and set remainder in fee pool
-	amt, re := remaining.TruncateDecimal()
-	if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, types.ProtocolPoolModuleName, amt); err != nil {
-		return err
-	}
 
-	if err := k.FeePool.Set(ctx, types.FeePool{DecimalPool: feePool.DecimalPool.Add(re...)}); err != nil {
-		return err
-	}
-
-	return nil
+	// allocate community funding
+	feePool.CommunityPool = feePool.CommunityPool.Add(remaining...)
+	return k.FeePool.Set(ctx, feePool)
 }
 
 // AllocateTokensToValidator allocate tokens to a particular validator,
 // splitting according to commission.
-func (k Keeper) AllocateTokensToValidator(ctx context.Context, val sdk.ValidatorI, tokens sdk.DecCoins) error {
+func (k Keeper) AllocateTokensToValidator(ctx context.Context, val stakingtypes.ValidatorI, tokens sdk.DecCoins) error {
 	// split tokens between validator and delegators according to commission
 	commission := tokens.MulDec(val.GetCommission())
 	shared := tokens.Sub(commission)
@@ -146,24 +143,4 @@ func (k Keeper) AllocateTokensToValidator(ctx context.Context, val sdk.Validator
 
 	outstanding.Rewards = outstanding.Rewards.Add(tokens...)
 	return k.ValidatorOutstandingRewards.Set(ctx, valBz, outstanding)
-}
-
-// sendDecimalPoolToCommunityPool sends the decimal pool to the community pool
-// Any remainer stays in the decimal pool
-func (k Keeper) sendDecimalPoolToCommunityPool(ctx context.Context) error {
-	feePool, err := k.FeePool.Get(ctx)
-	if err != nil {
-		return err
-	}
-
-	if feePool.DecimalPool.IsZero() {
-		return nil
-	}
-
-	amt, re := feePool.DecimalPool.TruncateDecimal()
-	if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, types.ProtocolPoolModuleName, amt); err != nil {
-		return err
-	}
-
-	return k.FeePool.Set(ctx, types.FeePool{DecimalPool: re})
 }

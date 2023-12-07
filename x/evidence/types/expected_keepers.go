@@ -10,6 +10,7 @@ import (
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 type (
@@ -17,7 +18,7 @@ type (
 	// evidence module.
 	StakingKeeper interface {
 		ConsensusAddressCodec() address.Codec
-		ValidatorByConsAddr(context.Context, sdk.ConsAddress) (sdk.ValidatorI, error)
+		ValidatorByConsAddr(context.Context, sdk.ConsAddress) (stakingtypes.ValidatorI, error)
 	}
 
 	// SlashingKeeper defines the slashing module interface contract needed by the

@@ -26,11 +26,8 @@ const (
 // ABCIListenerServiceClient is the client API for ABCIListenerService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-//
-// Deprecated: Do not use.
 type ABCIListenerServiceClient interface {
-	// ListenFinalizeBlock is the corresponding endpoint for
-	// ABCIListener.ListenEndBlock
+	// ListenFinalizeBlock is the corresponding endpoint for ABCIListener.ListenEndBlock
 	ListenFinalizeBlock(ctx context.Context, in *ListenFinalizeBlockRequest, opts ...grpc.CallOption) (*ListenFinalizeBlockResponse, error)
 	// ListenCommit is the corresponding endpoint for ABCIListener.ListenCommit
 	ListenCommit(ctx context.Context, in *ListenCommitRequest, opts ...grpc.CallOption) (*ListenCommitResponse, error)
@@ -40,7 +37,6 @@ type aBCIListenerServiceClient struct {
 	cc grpc.ClientConnInterface
 }
 
-// Deprecated: Do not use.
 func NewABCIListenerServiceClient(cc grpc.ClientConnInterface) ABCIListenerServiceClient {
 	return &aBCIListenerServiceClient{cc}
 }
@@ -66,11 +62,8 @@ func (c *aBCIListenerServiceClient) ListenCommit(ctx context.Context, in *Listen
 // ABCIListenerServiceServer is the server API for ABCIListenerService service.
 // All implementations must embed UnimplementedABCIListenerServiceServer
 // for forward compatibility
-//
-// Deprecated: Do not use.
 type ABCIListenerServiceServer interface {
-	// ListenFinalizeBlock is the corresponding endpoint for
-	// ABCIListener.ListenEndBlock
+	// ListenFinalizeBlock is the corresponding endpoint for ABCIListener.ListenEndBlock
 	ListenFinalizeBlock(context.Context, *ListenFinalizeBlockRequest) (*ListenFinalizeBlockResponse, error)
 	// ListenCommit is the corresponding endpoint for ABCIListener.ListenCommit
 	ListenCommit(context.Context, *ListenCommitRequest) (*ListenCommitResponse, error)
@@ -96,7 +89,6 @@ type UnsafeABCIListenerServiceServer interface {
 	mustEmbedUnimplementedABCIListenerServiceServer()
 }
 
-// Deprecated: Do not use.
 func RegisterABCIListenerServiceServer(s grpc.ServiceRegistrar, srv ABCIListenerServiceServer) {
 	s.RegisterService(&ABCIListenerService_ServiceDesc, srv)
 }

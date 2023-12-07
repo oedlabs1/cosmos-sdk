@@ -14,7 +14,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/log"
-	"cosmossdk.io/x/staking"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -32,6 +31,7 @@ import (
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	genutiltest "github.com/cosmos/cosmos-sdk/x/genutil/client/testutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 var testMbm = module.NewBasicManager(
@@ -179,7 +179,7 @@ func TestEmptyState(t *testing.T) {
 	r, w, _ := os.Pipe()
 	os.Stdout = w
 
-	cmd = genutilcli.ExportCmd(nil)
+	cmd = server.ExportCmd(nil)
 	require.NoError(t, cmd.ExecuteContext(ctx))
 
 	outC := make(chan string)
@@ -273,7 +273,7 @@ func TestInitConfig(t *testing.T) {
 	r, w, _ := os.Pipe()
 	os.Stdout = w
 
-	cmd = genutilcli.ExportCmd(nil)
+	cmd = server.ExportCmd(nil)
 	require.NoError(t, cmd.ExecuteContext(ctx))
 
 	outC := make(chan string)

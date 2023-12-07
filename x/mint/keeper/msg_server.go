@@ -4,7 +4,8 @@ import (
 	"context"
 
 	"cosmossdk.io/errors"
-	"cosmossdk.io/x/mint/types"
+
+	"github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
 var _ types.MsgServer = msgServer{}

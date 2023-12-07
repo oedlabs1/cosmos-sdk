@@ -5,16 +5,17 @@ import (
 	"fmt"
 
 	"cosmossdk.io/collections"
-	"cosmossdk.io/x/distribution/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 // InitGenesis sets distribution information for genesis
 func (k Keeper) InitGenesis(ctx context.Context, data types.GenesisState) {
 	var moduleHoldings sdk.DecCoins
 
-	if err := k.FeePool.Set(ctx, data.FeePool); err != nil {
+	err := k.FeePool.Set(ctx, data.FeePool)
+	if err != nil {
 		panic(err)
 	}
 
@@ -46,7 +47,7 @@ func (k Keeper) InitGenesis(ctx context.Context, data types.GenesisState) {
 		}
 	}
 
-	if err := k.PreviousProposer.Set(ctx, previousProposer); err != nil {
+	if err = k.PreviousProposer.Set(ctx, previousProposer); err != nil {
 		panic(err)
 	}
 
@@ -127,7 +128,7 @@ func (k Keeper) InitGenesis(ctx context.Context, data types.GenesisState) {
 		}
 	}
 
-	moduleHoldings = moduleHoldings.Add(data.FeePool.DecimalPool...)
+	moduleHoldings = moduleHoldings.Add(data.FeePool.CommunityPool...)
 	moduleHoldingsInt, _ := moduleHoldings.TruncateDecimal()
 
 	// check if the module account exists

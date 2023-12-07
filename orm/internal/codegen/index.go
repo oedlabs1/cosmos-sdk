@@ -9,8 +9,6 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
-const indexKey = "IndexKey"
-
 func (t tableGen) genIndexKeys() {
 	// interface that all keys must adhere to
 	t.P("type ", t.indexKeyInterfaceName(), " interface {")
@@ -60,7 +58,7 @@ func (t tableGen) genIndexInterfaceGuard(idxKeyName string) {
 }
 
 func (t tableGen) indexKeyInterfaceName() string {
-	return t.msg.GoIdent.GoName + indexKey
+	return t.msg.GoIdent.GoName + "IndexKey"
 }
 
 func (t tableGen) genIndexKey(idxKeyName string) {
@@ -84,7 +82,7 @@ func (t tableGen) indexKeyName(names []protoreflect.Name) string {
 		cnames[i] = strcase.ToCamel(string(name))
 	}
 	joinedNames := strings.Join(cnames, "")
-	return t.msg.GoIdent.GoName + joinedNames + indexKey
+	return t.msg.GoIdent.GoName + joinedNames + "IndexKey"
 }
 
 func (t tableGen) indexStructName(fields []string) string {
@@ -93,7 +91,7 @@ func (t tableGen) indexStructName(fields []string) string {
 		names[i] = strcase.ToCamel(field)
 	}
 	joinedNames := strings.Join(names, "")
-	return t.msg.GoIdent.GoName + joinedNames + indexKey
+	return t.msg.GoIdent.GoName + joinedNames + "IndexKey"
 }
 
 func (t tableGen) genIndex(fields string, id uint32, isPrimaryKey bool) {

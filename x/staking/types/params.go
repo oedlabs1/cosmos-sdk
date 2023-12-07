@@ -31,20 +31,11 @@ const (
 	DefaultHistoricalEntries uint32 = 10000
 )
 
-var (
-	// DefaultMinCommissionRate is set to 0%
-	DefaultMinCommissionRate = math.LegacyZeroDec()
-
-	// DefaultKeyRotationFee is fees used to rotate the ConsPubkey or Operator key
-	DefaultKeyRotationFee = sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000)
-)
+// DefaultMinCommissionRate is set to 0%
+var DefaultMinCommissionRate = math.LegacyZeroDec()
 
 // NewParams creates a new Params instance
-func NewParams(unbondingTime time.Duration,
-	maxValidators, maxEntries, historicalEntries uint32,
-	bondDenom string, minCommissionRate math.LegacyDec,
-	keyRotationFee sdk.Coin,
-) Params {
+func NewParams(unbondingTime time.Duration, maxValidators, maxEntries, historicalEntries uint32, bondDenom string, minCommissionRate math.LegacyDec) Params {
 	return Params{
 		UnbondingTime:     unbondingTime,
 		MaxValidators:     maxValidators,
@@ -52,7 +43,6 @@ func NewParams(unbondingTime time.Duration,
 		HistoricalEntries: historicalEntries,
 		BondDenom:         bondDenom,
 		MinCommissionRate: minCommissionRate,
-		KeyRotationFee:    keyRotationFee,
 	}
 }
 
@@ -65,7 +55,6 @@ func DefaultParams() Params {
 		DefaultHistoricalEntries,
 		sdk.DefaultBondDenom,
 		DefaultMinCommissionRate,
-		DefaultKeyRotationFee,
 	)
 }
 
@@ -112,10 +101,6 @@ func (p Params) Validate() error {
 	}
 
 	if err := validateHistoricalEntries(p.HistoricalEntries); err != nil {
-		return err
-	}
-
-	if err := validateKeyRotationFee(p.KeyRotationFee); err != nil {
 		return err
 	}
 
@@ -214,22 +199,6 @@ func validateMinCommissionRate(i interface{}) error {
 	}
 	if v.GT(math.LegacyOneDec()) {
 		return fmt.Errorf("minimum commission rate cannot be greater than 100%%: %s", v)
-	}
-
-	return nil
-}
-
-func validateKeyRotationFee(i interface{}) error {
-	v, ok := i.(sdk.Coin)
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
-	}
-
-	if v.IsNil() {
-		return fmt.Errorf("cons pubkey rotation fee cannot be nil: %s", v)
-	}
-	if v.IsLTE(sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)) {
-		return fmt.Errorf("cons pubkey rotation fee cannot be negative or zero: %s", v)
 	}
 
 	return nil

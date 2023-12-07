@@ -13,14 +13,6 @@ import (
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/math"
-	"cosmossdk.io/x/auth"
-	authcli "cosmossdk.io/x/auth/client/cli"
-	authtestutil "cosmossdk.io/x/auth/client/testutil"
-	"cosmossdk.io/x/bank"
-	banktypes "cosmossdk.io/x/bank/types"
-	"cosmossdk.io/x/gov"
-	govtestutil "cosmossdk.io/x/gov/client/testutil"
-	govtypes "cosmossdk.io/x/gov/types/v1beta1"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -35,7 +27,15 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	testutilmod "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/types/tx"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
+	authtestutil "github.com/cosmos/cosmos-sdk/x/auth/client/testutil"
+	"github.com/cosmos/cosmos-sdk/x/bank"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
+	"github.com/cosmos/cosmos-sdk/x/gov"
+	govtestutil "github.com/cosmos/cosmos-sdk/x/gov/client/testutil"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 type CLITestSuite struct {
@@ -169,65 +169,6 @@ func (s *CLITestSuite) TestCLISignBatch() {
 	// sign-batch file - offline and account-number is set but sequence is not set
 	_, err = authtestutil.TxSignBatchExec(s.clientCtx, s.val, outputFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, s.clientCtx.ChainID), fmt.Sprintf("--%s=%s", flags.FlagAccountNumber, "1"), "--offline")
 	s.Require().EqualError(err, "required flag(s) \"sequence\" not set")
-}
-
-func (s *CLITestSuite) TestCLISignBatchTotalFees() {
-	txCfg := s.clientCtx.TxConfig
-	s.clientCtx.HomeDir = strings.Replace(s.clientCtx.HomeDir, "simd", "simcli", 1)
-
-	testCases := []struct {
-		name            string
-		args            []string
-		numTransactions int
-		denom           string
-	}{
-		{
-			"Offline batch-sign one transaction",
-			[]string{"--offline", "--account-number", "1", "--sequence", "1", "--append"},
-			1,
-			"stake",
-		},
-		{
-			"Offline batch-sign two transactions",
-			[]string{"--offline", "--account-number", "1", "--sequence", "1", "--append"},
-			2,
-			"stake",
-		},
-	}
-
-	for _, tc := range testCases {
-		s.Run(tc.name, func() {
-			// Create multiple transactions and write them to separate files
-			sendTokens := sdk.NewCoin(tc.denom, sdk.TokensFromConsensusPower(10, sdk.DefaultPowerReduction))
-			expectedBatchedTotalFee := int64(0)
-			txFiles := make([]string, tc.numTransactions)
-			for i := 0; i < tc.numTransactions; i++ {
-				tx, err := s.createBankMsg(s.clientCtx, s.val,
-					sdk.NewCoins(sendTokens), clitestutil.TestTxConfig{GenOnly: true})
-				s.Require().NoError(err)
-				txFile := testutil.WriteToNewTempFile(s.T(), tx.String()+"\n")
-				defer txFile.Close()
-				txFiles[i] = txFile.Name()
-
-				unsignedTx, err := txCfg.TxJSONDecoder()(tx.Bytes())
-				s.Require().NoError(err)
-				txBuilder, err := txCfg.WrapTxBuilder(unsignedTx)
-				s.Require().NoError(err)
-				expectedBatchedTotalFee += txBuilder.GetTx().GetFee().AmountOf(tc.denom).Int64()
-			}
-
-			// Test batch sign
-			batchSignArgs := append([]string{fmt.Sprintf("--from=%s", s.val.String())}, append(txFiles, tc.args...)...)
-			signedTx, err := clitestutil.ExecTestCLICmd(s.clientCtx, authcli.GetSignBatchCommand(), batchSignArgs)
-			s.Require().NoError(err)
-			signedFinalTx, err := txCfg.TxJSONDecoder()(signedTx.Bytes())
-			s.Require().NoError(err)
-			txBuilder, err := txCfg.WrapTxBuilder(signedFinalTx)
-			s.Require().NoError(err)
-			finalTotalFee := txBuilder.GetTx().GetFee()
-			s.Require().Equal(expectedBatchedTotalFee, finalTotalFee.AmountOf(tc.denom).Int64())
-		})
-	}
 }
 
 func (s *CLITestSuite) TestCLIQueryTxCmdByHash() {

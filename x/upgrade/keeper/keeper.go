@@ -529,10 +529,6 @@ func (k Keeper) ReadUpgradeInfoFromDisk() (types.Plan, error) {
 		return upgradeInfo, err
 	}
 
-	if err := upgradeInfo.ValidateBasic(); err != nil {
-		return upgradeInfo, err
-	}
-
 	return upgradeInfo, nil
 }
 

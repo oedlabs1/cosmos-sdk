@@ -2,16 +2,15 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 
-	metrics "github.com/hashicorp/go-metrics"
+	"github.com/hashicorp/go-metrics"
 
 	"cosmossdk.io/errors"
-	"cosmossdk.io/x/distribution/types"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 type msgServer struct {
@@ -155,10 +154,10 @@ func (k msgServer) CommunityPoolSpend(ctx context.Context, msg *types.MsgCommuni
 
 	recipient, err := k.authKeeper.AddressCodec().StringToBytes(msg.Recipient)
 	if err != nil {
-		return nil, fmt.Errorf("invalid recipient address: %w", err)
+		return nil, err
 	}
 
-	if err := k.poolKeeper.DistributeFromCommunityPool(ctx, msg.Amount, recipient); err != nil {
+	if err := k.poolKeeper.DistributeFromFeePool(ctx, msg.Amount, recipient); err != nil {
 		return nil, err
 	}
 
@@ -171,7 +170,7 @@ func (k msgServer) CommunityPoolSpend(ctx context.Context, msg *types.MsgCommuni
 func (k msgServer) DepositValidatorRewardsPool(ctx context.Context, msg *types.MsgDepositValidatorRewardsPool) (*types.MsgDepositValidatorRewardsPoolResponse, error) {
 	depositor, err := k.authKeeper.AddressCodec().StringToBytes(msg.Depositor)
 	if err != nil {
-		return nil, fmt.Errorf("invalid depositor address: %w", err)
+		return nil, err
 	}
 
 	// deposit coins from depositor's account to the distribution module

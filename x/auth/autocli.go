@@ -76,18 +76,6 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				},
 			},
 		},
-		Tx: &autocliv1.ServiceCommandDescriptor{
-			Service: authv1beta1.Msg_ServiceDesc.ServiceName,
-			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
-				{
-					RpcMethod:      "UpdateParams",
-					Use:            "update-params-proposal [params]",
-					Short:          "Submit a proposal to update auth module params. Note: the entire params must be provided.",
-					Example:        fmt.Sprintf(`%s tx auth update-params-proposal '{ "max_memo_characters": 0, "tx_sig_limit": 0, "tx_size_cost_per_byte": 0, "sig_verify_cost_ed25519": 0, "sig_verify_cost_secp256k1": 0 }'`, version.AppName),
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "params"}},
-					GovProposal:    true,
-				},
-			},
-		},
+		// Tx is purposely left empty, as the only tx is MsgUpdateParams which is gov gated.
 	}
 }

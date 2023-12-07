@@ -8,9 +8,9 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
-	"cosmossdk.io/x/staking/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // InitGenesis sets the pool and parameters for the provided keeper.  For each
@@ -72,14 +72,14 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) (res 
 		}
 
 		switch validator.GetStatus() {
-		case sdk.Bonded:
+		case types.Bonded:
 			bondedTokens = bondedTokens.Add(validator.GetTokens())
 
-		case sdk.Unbonding, sdk.Unbonded:
+		case types.Unbonding, types.Unbonded:
 			notBondedTokens = notBondedTokens.Add(validator.GetTokens())
 
 		default:
-			panic(fmt.Sprintf("invalid validator status: %v", validator.GetStatus()))
+			panic("invalid validator status")
 		}
 	}
 

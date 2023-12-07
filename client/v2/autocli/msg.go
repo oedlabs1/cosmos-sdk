@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/cockroachdb/errors"
-	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -13,22 +12,13 @@ import (
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/client/v2/autocli/flag"
-	"cosmossdk.io/client/v2/internal/flags"
-	"cosmossdk.io/client/v2/internal/util"
-	addresscodec "cosmossdk.io/core/address"
-	authtx "cosmossdk.io/x/auth/tx"
-	authtxconfig "cosmossdk.io/x/auth/tx/config"
-
-	// the following will be extracted to a separate module
-	// https://github.com/cosmos/cosmos-sdk/issues/14403
-	authtypes "cosmossdk.io/x/auth/types"
-	govcli "cosmossdk.io/x/gov/client/cli"
-	govtypes "cosmossdk.io/x/gov/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
+	authtxconfig "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 )
 
 // BuildMsgCommand builds the msg commands for all the provided modules. If a custom command is provided for a
@@ -95,10 +85,6 @@ func (b *Builder) AddMsgServiceCommands(cmd *cobra.Command, cmdDescriptor *autoc
 			continue
 		}
 
-		if !util.IsSupportedVersion(util.DescriptorDocs(methodDescriptor)) {
-			continue
-		}
-
 		methodCmd, err := b.BuildMsgMethodCommand(methodDescriptor, methodOpts)
 		if err != nil {
 			return err
@@ -120,7 +106,7 @@ func (b *Builder) AddMsgServiceCommands(cmd *cobra.Command, cmdDescriptor *autoc
 
 // BuildMsgMethodCommand returns a command that outputs the JSON representation of the message.
 func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor, options *autocliv1.RpcCommandOptions) (*cobra.Command, error) {
-	execFunc := func(cmd *cobra.Command, input protoreflect.Message) error {
+	cmd, err := b.buildMethodCommandCommon(descriptor, options, func(cmd *cobra.Command, input protoreflect.Message) error {
 		cmd.SetContext(context.WithValue(context.Background(), client.ClientContextKey, &b.ClientCtx))
 
 		clientCtx, err := client.GetClientTxContext(cmd)
@@ -128,51 +114,25 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 			return err
 		}
 
-		clientCtx = clientCtx.WithCmdContext(cmd.Context())
-		clientCtx = clientCtx.WithOutput(cmd.OutOrStdout())
+		// enable sign mode textual and config tx options
+		b.TxConfigOpts.EnabledSignModes = append(b.TxConfigOpts.EnabledSignModes, signing.SignMode_SIGN_MODE_TEXTUAL)
+		b.TxConfigOpts.TextualCoinMetadataQueryFn = authtxconfig.NewGRPCCoinMetadataQueryFn(clientCtx)
 
-		// enable sign mode textual
-		// the config is always overwritten as we need to have set the flags to the client context
-		// this ensures that the context has the correct client.
-		if !clientCtx.Offline {
-			b.TxConfigOpts.EnabledSignModes = append(b.TxConfigOpts.EnabledSignModes, signing.SignMode_SIGN_MODE_TEXTUAL)
-			b.TxConfigOpts.TextualCoinMetadataQueryFn = authtxconfig.NewGRPCCoinMetadataQueryFn(clientCtx)
-
-			txConfig, err := authtx.NewTxConfigWithOptions(
-				codec.NewProtoCodec(clientCtx.InterfaceRegistry),
-				b.TxConfigOpts,
-			)
-			if err != nil {
-				return err
-			}
-
-			clientCtx = clientCtx.WithTxConfig(txConfig)
+		txConfigWithTextual, err := authtx.NewTxConfigWithOptions(
+			codec.NewProtoCodec(clientCtx.InterfaceRegistry),
+			b.TxConfigOpts,
+		)
+		if err != nil {
+			return err
 		}
-
-		fd := input.Descriptor().Fields().ByName(protoreflect.Name(flag.GetSignerFieldName(input.Descriptor())))
-		addressCodec := b.Builder.AddressCodec
-
-		// handle gov proposals commands
-		skipProposal, _ := cmd.Flags().GetBool(flags.FlagNoProposal)
-		if options.GovProposal && !skipProposal {
-			return b.handleGovProposal(options, cmd, input, clientCtx, addressCodec, fd)
-		}
+		clientCtx = clientCtx.WithTxConfig(txConfigWithTextual)
+		clientCtx.Output = cmd.OutOrStdout()
 
 		// set signer to signer field if empty
+		fd := input.Descriptor().Fields().ByName(protoreflect.Name(flag.GetSignerFieldName(input.Descriptor())))
 		if addr := input.Get(fd).String(); addr == "" {
-			scalarType, ok := flag.GetScalarType(fd)
-			if ok {
-				// override address codec if validator or consensus address
-				switch scalarType {
-				case flag.ValidatorAddressStringScalarType:
-					addressCodec = b.Builder.ValidatorAddressCodec
-				case flag.ConsensusAddressStringScalarType:
-					addressCodec = b.Builder.ConsensusAddressCodec
-				}
-			}
-
 			signerFromFlag := clientCtx.GetFromAddress()
-			signer, err := addressCodec.BytesToString(signerFromFlag.Bytes())
+			signer, err := b.ClientCtx.AddressCodec.BytesToString(signerFromFlag.Bytes())
 			if err != nil {
 				return fmt.Errorf("failed to set signer on message, got %v: %w", signerFromFlag, err)
 			}
@@ -187,12 +147,7 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 		proto.Merge(msg, input.Interface())
 
 		return clienttx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
-	}
-
-	cmd, err := b.buildMethodCommandCommon(descriptor, options, execFunc)
-	if err != nil {
-		return nil, err
-	}
+	})
 
 	if b.AddTxConnFlags != nil {
 		b.AddTxConnFlags(cmd)
@@ -203,51 +158,5 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 		cmd.SilenceUsage = true
 	}
 
-	// set gov proposal flags if command is a gov proposal
-	if options.GovProposal {
-		govcli.AddGovPropFlagsToCmd(cmd)
-		cmd.Flags().Bool(flags.FlagNoProposal, false, "Skip gov proposal and submit a normal transaction")
-	}
-
-	return cmd, nil
-}
-
-// handleGovProposal sets the authority field of the message to the gov module address and creates a gov proposal.
-func (b *Builder) handleGovProposal(
-	options *autocliv1.RpcCommandOptions,
-	cmd *cobra.Command,
-	input protoreflect.Message,
-	clientCtx client.Context,
-	addressCodec addresscodec.Codec,
-	fd protoreflect.FieldDescriptor,
-) error {
-	govAuthority := authtypes.NewModuleAddress(govtypes.ModuleName)
-	authority, err := addressCodec.BytesToString(govAuthority.Bytes())
-	if err != nil {
-		return fmt.Errorf("failed to convert gov authority: %w", err)
-	}
-	input.Set(fd, protoreflect.ValueOfString(authority))
-
-	signerFromFlag := clientCtx.GetFromAddress()
-	signer, err := addressCodec.BytesToString(signerFromFlag.Bytes())
-	if err != nil {
-		return fmt.Errorf("failed to set signer on message, got %q: %w", signerFromFlag, err)
-	}
-
-	proposal, err := govcli.ReadGovPropCmdFlags(signer, cmd.Flags())
-	if err != nil {
-		return err
-	}
-
-	// AutoCLI uses protov2 messages, while the SDK only supports proto v1 messages.
-	// Here we use dynamicpb, to create a proto v1 compatible message.
-	// The SDK codec will handle protov2 -> protov1 (marshal)
-	msg := dynamicpb.NewMessage(input.Descriptor())
-	proto.Merge(msg, input.Interface())
-
-	if err := proposal.SetMsgs([]gogoproto.Message{msg}); err != nil {
-		return fmt.Errorf("failed to set msg in proposal %w", err)
-	}
-
-	return clienttx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), proposal)
+	return cmd, err
 }

@@ -8,7 +8,6 @@ import (
 
 	secp "github.com/decred/dcrd/dcrec/secp256k1/v4"
 	"github.com/decred/dcrd/dcrec/secp256k1/v4/ecdsa"
-	"gitlab.com/yawning/secp256k1-voi/secec"
 
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -321,13 +320,13 @@ func getPubKeyUnsafe(device SECP256K1, path hd.BIP44Params) (types.PubKey, error
 	}
 
 	// re-serialize in the 33-byte compressed format
-	cmp, err := secec.NewPublicKey(publicKey)
+	cmp, err := secp.ParsePubKey(publicKey)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing public key: %w", err)
 	}
 
 	compressedPublicKey := make([]byte, secp256k1.PubKeySize)
-	copy(compressedPublicKey, cmp.CompressedBytes())
+	copy(compressedPublicKey, cmp.SerializeCompressed())
 
 	return options.createPubkey(compressedPublicKey), nil
 }
@@ -345,13 +344,13 @@ func getPubKeyAddrSafe(device SECP256K1, path hd.BIP44Params, hrp string) (types
 	}
 
 	// re-serialize in the 33-byte compressed format
-	cmp, err := secec.NewPublicKey(publicKey)
+	cmp, err := secp.ParsePubKey(publicKey)
 	if err != nil {
 		return nil, "", fmt.Errorf("error parsing public key: %w", err)
 	}
 
 	compressedPublicKey := make([]byte, secp256k1.PubKeySize)
-	copy(compressedPublicKey, cmp.CompressedBytes())
+	copy(compressedPublicKey, cmp.SerializeCompressed())
 
 	return options.createPubkey(compressedPublicKey), addr, nil
 }

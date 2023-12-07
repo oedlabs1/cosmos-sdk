@@ -9,7 +9,6 @@ import (
 	"cosmossdk.io/core/header"
 	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
-	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/feegrant"
 	"cosmossdk.io/x/feegrant/keeper"
 	"cosmossdk.io/x/feegrant/module"
@@ -22,6 +21,7 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func TestFeegrantPruning(t *testing.T) {
@@ -83,7 +83,7 @@ func TestFeegrantPruning(t *testing.T) {
 	feegrant.RegisterQueryServer(queryHelper, feegrantKeeper)
 	queryClient := feegrant.NewQueryClient(queryHelper)
 
-	require.NoError(t, module.EndBlocker(testCtx.Ctx, feegrantKeeper))
+	module.EndBlocker(testCtx.Ctx, feegrantKeeper)
 
 	granteeStr, err := ac.BytesToString(grantee)
 	require.NoError(t, err)
@@ -95,7 +95,7 @@ func TestFeegrantPruning(t *testing.T) {
 	require.Len(t, res.Allowances, 2)
 
 	testCtx.Ctx = testCtx.Ctx.WithHeaderInfo(header.Info{Time: now.AddDate(0, 0, 2)})
-	require.NoError(t, module.EndBlocker(testCtx.Ctx, feegrantKeeper))
+	module.EndBlocker(testCtx.Ctx, feegrantKeeper)
 
 	res, err = queryClient.Allowances(testCtx.Ctx.Context(), &feegrant.QueryAllowancesRequest{
 		Grantee: granteeStr,

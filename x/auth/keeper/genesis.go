@@ -3,9 +3,8 @@ package keeper
 import (
 	"context"
 
-	"cosmossdk.io/x/auth/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // InitGenesis - Init store state from genesis data

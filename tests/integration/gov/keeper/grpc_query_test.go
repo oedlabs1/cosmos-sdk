@@ -8,8 +8,9 @@ import (
 	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/math"
-	v1 "cosmossdk.io/x/gov/types/v1"
-	"cosmossdk.io/x/gov/types/v1beta1"
+
+	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 func TestGRPCQueryTally(t *testing.T) {

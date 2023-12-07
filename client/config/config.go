@@ -12,12 +12,11 @@ import (
 // DefaultConfig returns default config for the client.toml
 func DefaultConfig() *Config {
 	return &Config{
-		ChainID:               "",
-		KeyringBackend:        "os",
-		KeyringDefaultKeyName: "",
-		Output:                "text",
-		Node:                  "tcp://localhost:26657",
-		BroadcastMode:         "sync",
+		ChainID:        "",
+		KeyringBackend: "os",
+		Output:         "text",
+		Node:           "tcp://localhost:26657",
+		BroadcastMode:  "sync",
 	}
 }
 
@@ -26,12 +25,11 @@ func DefaultConfig() *Config {
 type ClientConfig Config
 
 type Config struct {
-	ChainID               string `mapstructure:"chain-id" json:"chain-id"`
-	KeyringBackend        string `mapstructure:"keyring-backend" json:"keyring-backend"`
-	KeyringDefaultKeyName string `mapstructure:"keyring-default-keyname" json:"keyring-default-keyname"`
-	Output                string `mapstructure:"output" json:"output"`
-	Node                  string `mapstructure:"node" json:"node"`
-	BroadcastMode         string `mapstructure:"broadcast-mode" json:"broadcast-mode"`
+	ChainID        string `mapstructure:"chain-id" json:"chain-id"`
+	KeyringBackend string `mapstructure:"keyring-backend" json:"keyring-backend"`
+	Output         string `mapstructure:"output" json:"output"`
+	Node           string `mapstructure:"node" json:"node"`
+	BroadcastMode  string `mapstructure:"broadcast-mode" json:"broadcast-mode"`
 }
 
 // ReadFromClientConfig reads values from client.toml file and updates them in client.Context
@@ -97,8 +95,7 @@ func CreateClientConfig(ctx client.Context, customClientTemplate string, customC
 	// we need to update KeyringDir field on client.Context first cause it is used in NewKeyringFromBackend
 	ctx = ctx.WithOutputFormat(conf.Output).
 		WithChainID(conf.ChainID).
-		WithKeyringDir(ctx.HomeDir).
-		WithKeyringDefaultKeyName(conf.KeyringDefaultKeyName)
+		WithKeyringDir(ctx.HomeDir)
 
 	keyring, err := client.NewKeyringFromBackend(ctx, conf.KeyringBackend)
 	if err != nil {

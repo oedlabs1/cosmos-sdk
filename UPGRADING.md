@@ -34,6 +34,10 @@ Refer to SimApp `root_v2.go` and `root.go` for an example with an app v2 and a l
 
 ### Modules
 
+#### Params
+
+A standalone Go module was created and it is accessible at "cosmossdk.io/x/params".
+
 #### `**all**`
 
 ##### Genesis Interface
@@ -58,49 +62,9 @@ Most of Cosmos SDK modules have migrated to [collections](https://docs.cosmos.ne
 Many functions have been removed due to this changes as the API can be smaller thanks to collections.
 For modules that have migrated, verify you are checking against `collections.ErrNotFound` when applicable.
 
-#### `x/auth`
-
-Auth was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/auth`
-
-
-#### `x/authz`
-
-Authz was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/authz`
-
-#### `x/bank`
-
-Bank was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/bank`
-
 #### `x/distribution`
 
-Distribution was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/distribution`
-
 The existing chains using x/distribution module needs to add the new x/protocolpool module.
-
-#### `x/group`
-
-Group was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/group`
-
-#### `x/gov`
-
-Gov was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/gov`
-
-#### `x/mint`
-
-Mint was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/mint`
-
-#### `x/slashing`
-
-Slashing was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/slashing`
-
-#### `x/staking`
-
-Staking was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/staking`
-
-
-#### `x/params`
-
-A standalone Go module was created and it is accessible at "cosmossdk.io/x/params".
 
 #### `x/protocolpool`
 
@@ -150,7 +114,7 @@ These commands and flags are still supported for backward compatibility.
 
 For backward compatibility, the `**/tendermint/**` gRPC services are still supported.
 
-Additionally, the SDK is starting its abstraction from CometBFT Go types through the codebase:
+Additionally, the SDK is starting its abstraction from CometBFT Go types thorought the codebase:
 
 * The usage of the CometBFT logger has been replaced by the Cosmos SDK logger interface (`cosmossdk.io/log.Logger`).
 * The usage of `github.com/cometbft/cometbft/libs/bytes.HexByte` has been replaced by `[]byte`.
@@ -346,7 +310,7 @@ User manually wiring their chain need to add the logger argument when creating t
 
 #### Module Basics
 
-Previously, the `ModuleBasics` was a global variable that was used to register all modules' `AppModuleBasic` implementation.
+Previously, the `ModuleBasics` was a global variable that was used to register all modules's `AppModuleBasic` implementation.
 The global variable has been removed and the basic module manager can be now created from the module manager.
 
 This is automatically done for `depinject` / app v2 users, however for supplying different app module implementation, pass them via `depinject.Supply` in the main `AppConfig` (`app_config.go`):
@@ -365,7 +329,7 @@ depinject.Supply(
 		)
 ```
 
-Users manually wiring their chain need to use the new `module.NewBasicManagerFromManager` function, after the module manager creation, and pass a `map[string]module.AppModuleBasic` as argument for optionally overriding some module's `AppModuleBasic`.
+Users manually wiring their chain need to use the new `module.NewBasicManagerFromManager` function, after the module manager creation, and pass a `map[string]module.AppModuleBasic` as argument for optionally overridding some module's `AppModuleBasic`.
 
 #### AutoCLI
 
@@ -433,56 +397,6 @@ if err := app.RegisterStreamingServices(appOpts, app.kvStoreKeys()); err != nil 
 
 The return type of the interface method `TxConfig.SignModeHandler()` has been changed from `x/auth/signing.SignModeHandler` to `x/tx/signing.HandlerMap`. This change is transparent to most users as the `TxConfig` interface is typically implemented by private `x/auth/tx.config` struct (as returned by `auth.NewTxConfig`) which has been updated to return the new type. If users have implemented their own `TxConfig` interface, they will need to update their implementation to return the new type.
 
-##### Textual sign mode
-
-A new sign mode is available in the SDK that produces more human readable output, currently only available on Ledger
-devices but soon to be implemented in other UIs. 
-
-:::tip
-This sign mode does not allow offline signing
-:::
-
-When using (legacy) application wiring, the following must be added to `app.go` after setting the app's bank keeper:
-
-```go
-	enabledSignModes := append(tx.DefaultSignModes, sigtypes.SignMode_SIGN_MODE_TEXTUAL)
-	txConfigOpts := tx.ConfigOptions{
-		EnabledSignModes:           enabledSignModes,
-		TextualCoinMetadataQueryFn: txmodule.NewBankKeeperCoinMetadataQueryFn(app.BankKeeper),
-	}
-	txConfig, err := tx.NewTxConfigWithOptions(
-		appCodec,
-		txConfigOpts,
-	)
-	if err != nil {
-		log.Fatalf("Failed to create new TxConfig with options: %v", err)
-	}
-	app.txConfig = txConfig
-```
-
-When using `depinject` / `app v2`, **it's enabled by default** if there's a bank keeper present.
-
-And in the application client (usually `root.go`):
-
-```go
-	if !clientCtx.Offline {
-		txConfigOpts.EnabledSignModes = append(txConfigOpts.EnabledSignModes, signing.SignMode_SIGN_MODE_TEXTUAL)
-		txConfigOpts.TextualCoinMetadataQueryFn = txmodule.NewGRPCCoinMetadataQueryFn(clientCtx)
-		txConfigWithTextual, err := tx.NewTxConfigWithOptions(
-			codec.NewProtoCodec(clientCtx.InterfaceRegistry),
-			txConfigOpts,
-		)
-		if err != nil {
-			return err
-		}
-		clientCtx = clientCtx.WithTxConfig(txConfigWithTextual)
-	}
-```
-
-When using `depinject` / `app v2`, the a tx config should be recreated from the `txConfigOpts` to use `NewGRPCCoinMetadataQueryFn` instead of depending on the bank keeper (that is used in the server).
-
-To learn more see the [docs](https://docs.cosmos.network/main/learn/advanced/transactions#sign_mode_textual) and the [ADR-050](https://docs.cosmos.network/main/build/architecture/adr-050-sign-mode-textual).
-
 ### Modules
 
 #### `**all**`
@@ -493,7 +407,7 @@ To learn more see the [docs](https://docs.cosmos.network/main/learn/advanced/tra
 
 * Messages no longer need to implement the `LegacyMsg` interface and implementations of `GetSignBytes` can be deleted. Because of this change, global legacy Amino codec definitions and their registration in `init()` can safely be removed as well.
 
-* The `AppModuleBasic` interface has been simplified. Defining `GetTxCmd() *cobra.Command` and `GetQueryCmd() *cobra.Command` is no longer required. The module manager detects when module commands are defined. If AutoCLI is enabled, `EnhanceRootCommand()` will add the auto-generated commands to the root command, unless a custom module command is defined and register that one instead.
+* The `AppModuleBasic` interface has been simplifed. Defining `GetTxCmd() *cobra.Command` and `GetQueryCmd() *cobra.Command` is no longer required. The module manager detects when module commands are defined. If AutoCLI is enabled, `EnhanceRootCommand()` will add the auto-generated commands to the root command, unless a custom module command is defined and register that one instead.
 
 * The following modules' `Keeper` methods now take in a `context.Context` instead of `sdk.Context`. Any module that has an interfaces for them (like "expected keepers") will need to update and re-generate mocks if needed:
 
@@ -780,7 +694,7 @@ the correct code.
 
 #### `**all**`
 
-`EventTypeMessage` events, with `sdk.AttributeKeyModule` and `sdk.AttributeKeySender` are now emitted directly at message execution (in `baseapp`).
+`EventTypeMessage` events, with `sdk.AttributeKeyModule` and `sdk.AttributeKeySender` are now emitted directly at message excecution (in `baseapp`).
 This means that the following boilerplate should be removed from all your custom modules:
 
 ```go
@@ -800,7 +714,7 @@ In case a module does not follow the standard message path, (e.g. IBC), it is ad
 #### `x/params`
 
 The `params` module was deprecated since v0.46. The Cosmos SDK has migrated away from `x/params` for its own modules.
-Cosmos SDK modules now store their parameters directly in its respective modules.
+Cosmos SDK modules now store their parameters directly in its repective modules.
 The `params` module will be removed in `v0.50`, as mentioned [in v0.46 release](https://github.com/cosmos/cosmos-sdk/blob/v0.46.1/UPGRADING.md#xparams). It is strongly encouraged to migrate away from `x/params` before `v0.50`.
 
 When performing a chain migration, the params table must be initizalied manually. This was done in the modules keepers in previous versions.
@@ -909,7 +823,7 @@ When using an `app.go` without App Wiring, the following changes are required:
 + bApp.SetParamStore(&app.ConsensusParamsKeeper)
 ```
 
-When using App Wiring, the parameter store is automatically set for you.
+When using App Wiring, the paramater store is automatically set for you.
 
 #### `x/nft`
 
@@ -1000,7 +914,7 @@ mistakes.
 
 #### `x/params`
 
-* The `x/params` module has been deprecated in favour of each module housing and providing way to modify their parameters. Each module that has parameters that are changeable during runtime have an authority, the authority can be a module or user account. The Cosmos SDK team recommends migrating modules away from using the param module. An example of how this could look like can be found [here](https://github.com/cosmos/cosmos-sdk/pull/12363).
+* The `x/params` module has been depreacted in favour of each module housing and providing way to modify their parameters. Each module that has parameters that are changable during runtime have an authority, the authority can be a module or user account. The Cosmos SDK team recommends migrating modules away from using the param module. An example of how this could look like can be found [here](https://github.com/cosmos/cosmos-sdk/pull/12363).
 * The Param module will be maintained until April 18, 2023. At this point the module will reach end of life and be removed from the Cosmos SDK.
 
 #### `x/gov`
@@ -1037,4 +951,4 @@ message MsgSetWithdrawAddress {
 }
 ```
 
-When clients interact with a node they are required to set a codec in in the grpc.Dial. More information can be found in this [doc](https://docs.cosmos.network/v0.46/run-node/interact-node.html#programmatically-via-go).
+When clients interract with a node they are required to set a codec in in the grpc.Dial. More information can be found in this [doc](https://docs.cosmos.network/v0.46/run-node/interact-node.html#programmatically-via-go).

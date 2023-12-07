@@ -5,13 +5,13 @@ Usage:
   test [command]
 
 Available Commands:
-  burn             Execute the Burn RPC method
+  burn             
   completion       Generate the autocompletion script for the specified shell
   help             Help about any command
-  multi-send       Execute the MultiSend RPC method
+  multi-send       
   send             Send coins from one account to another
-  set-send-enabled Execute the SetSendEnabled RPC method
-  update-params    Execute the UpdateParams RPC method
+  set-send-enabled 
+  update-params    
 
 Flags:
   -h, --help   help for test

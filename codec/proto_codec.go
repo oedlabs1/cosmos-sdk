@@ -345,8 +345,7 @@ type grpcProtoCodec struct {
 func (g grpcProtoCodec) Marshal(v interface{}) ([]byte, error) {
 	switch m := v.(type) {
 	case proto.Message:
-		protov2MarshalOpts := proto.MarshalOptions{Deterministic: true}
-		return protov2MarshalOpts.Marshal(m)
+		return proto.Marshal(m)
 	case gogoproto.Message:
 		return g.cdc.Marshal(m)
 	default:

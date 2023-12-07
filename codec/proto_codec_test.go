@@ -13,14 +13,16 @@ import (
 	protov2 "google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoregistry"
 
-	counterv1 "cosmossdk.io/api/cosmos/counter/v1"
+	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
+	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
+	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	countertypes "github.com/cosmos/cosmos-sdk/x/counter/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 func createTestInterfaceRegistry() types.InterfaceRegistry {
@@ -111,7 +113,7 @@ func TestProtoCodecMarshal(t *testing.T) {
 	require.NoError(t, err)
 
 	// test typed nil input shouldn't panic
-	var v *countertypes.QueryGetCountRequest
+	var v *banktypes.QueryBalanceResponse
 	bz, err = grpcServerEncode(cartoonCdc.GRPCCodec(), v)
 	require.NoError(t, err)
 	require.Empty(t, bz)
@@ -187,9 +189,15 @@ func TestGetSigners(t *testing.T) {
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 	testAddr := sdk.AccAddress("test")
 	testAddrStr := testAddr.String()
+	testAddr2 := sdk.AccAddress("test2")
+	testAddrStr2 := testAddr2.String()
 
-	msgSendV1 := &countertypes.MsgIncreaseCounter{Signer: testAddrStr, Count: 1}
-	msgSendV2 := &counterv1.MsgIncreaseCounter{Signer: testAddrStr, Count: 1}
+	msgSendV1 := banktypes.NewMsgSend(testAddr, testAddr2, sdk.NewCoins(sdk.NewCoin("foo", sdkmath.NewInt(1))))
+	msgSendV2 := &bankv1beta1.MsgSend{
+		FromAddress: testAddrStr,
+		ToAddress:   testAddrStr2,
+		Amount:      []*basev1beta1.Coin{{Denom: "foo", Amount: "1"}},
+	}
 
 	signers, msgSendV2Copy, err := cdc.GetMsgV1Signers(msgSendV1)
 	require.NoError(t, err)

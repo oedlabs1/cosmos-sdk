@@ -2,7 +2,6 @@ package baseapp_test
 
 import (
 	"context"
-	"crypto/sha256"
 	"fmt"
 	"math/rand"
 	"testing"
@@ -21,7 +20,6 @@ import (
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"
-	authtx "cosmossdk.io/x/auth/tx"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
@@ -32,6 +30,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
 
 var (
@@ -203,9 +202,7 @@ func TestLoadVersion(t *testing.T) {
 	err := app.LoadLatestVersion() // needed to make stores non-nil
 	require.Nil(t, err)
 
-	emptyHash := sha256.Sum256([]byte{})
-	appHash := emptyHash[:]
-	emptyCommitID := storetypes.CommitID{Hash: appHash}
+	emptyCommitID := storetypes.CommitID{}
 
 	// fresh store has zero/empty last commit
 	lastHeight := app.LastBlockHeight()
@@ -594,53 +591,6 @@ func TestBaseAppAnteHandler(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func TestBaseAppPostHandler(t *testing.T) {
-	postHandlerRun := false
-	anteOpt := func(bapp *baseapp.BaseApp) {
-		bapp.SetPostHandler(func(ctx sdk.Context, tx sdk.Tx, simulate, success bool) (newCtx sdk.Context, err error) {
-			postHandlerRun = true
-			return ctx, nil
-		})
-	}
-
-	suite := NewBaseAppSuite(t, anteOpt)
-
-	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImpl{t, capKey1, []byte("foo")})
-
-	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
-		ConsensusParams: &cmtproto.ConsensusParams{},
-	})
-	require.NoError(t, err)
-
-	// execute a tx that will fail ante handler execution
-	//
-	// NOTE: State should not be mutated here. This will be implicitly checked by
-	// the next txs ante handler execution (anteHandlerTxTest).
-	tx := newTxCounter(t, suite.txConfig, 0, 0)
-	txBytes, err := suite.txConfig.TxEncoder()(tx)
-	require.NoError(t, err)
-
-	res, err := suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1, Txs: [][]byte{txBytes}})
-	require.NoError(t, err)
-	require.Empty(t, res.Events)
-	require.True(t, res.TxResults[0].IsOK(), fmt.Sprintf("%v", res))
-
-	// PostHandler runs on successful message execution
-	require.True(t, postHandlerRun)
-
-	// It should also run on failed message execution
-	postHandlerRun = false
-	tx = setFailOnHandler(t, suite.txConfig, tx, true)
-	txBytes, err = suite.txConfig.TxEncoder()(tx)
-	require.NoError(t, err)
-	res, err = suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1, Txs: [][]byte{txBytes}})
-	require.NoError(t, err)
-	require.Empty(t, res.Events)
-	require.False(t, res.TxResults[0].IsOK(), fmt.Sprintf("%v", res))
-
-	require.True(t, postHandlerRun)
-}
-
 // Test and ensure that invalid block heights always cause errors.
 // See issues:
 // - https://github.com/cosmos/cosmos-sdk/issues/11220
@@ -770,17 +720,6 @@ func TestGetMaximumBlockGas(t *testing.T) {
 	require.Panics(t, func() { suite.baseApp.GetMaximumBlockGas(ctx) })
 }
 
-func TestGetEmptyConsensusParams(t *testing.T) {
-	suite := NewBaseAppSuite(t)
-	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{})
-	require.NoError(t, err)
-	ctx := suite.baseApp.NewContext(true)
-
-	cp := suite.baseApp.GetConsensusParams(ctx)
-	require.Equal(t, cmtproto.ConsensusParams{}, cp)
-	require.Equal(t, uint64(0), suite.baseApp.GetMaximumBlockGas(ctx))
-}
-
 func TestLoadVersionPruning(t *testing.T) {
 	logger := log.NewNopLogger()
 	pruningOptions := pruningtypes.NewCustomPruningOptions(10, 15)
@@ -796,10 +735,7 @@ func TestLoadVersionPruning(t *testing.T) {
 	err := app.LoadLatestVersion() // needed to make stores non-nil
 	require.Nil(t, err)
 
-	emptyHash := sha256.Sum256([]byte{})
-	emptyCommitID := storetypes.CommitID{
-		Hash: emptyHash[:],
-	}
+	emptyCommitID := storetypes.CommitID{}
 
 	// fresh store has zero/empty last commit
 	lastHeight := app.LastBlockHeight()

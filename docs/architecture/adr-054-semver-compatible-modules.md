@@ -213,7 +213,7 @@ example:
 ```go
 func (k Keeper) DoSomething(msg MsgDoSomething) error {
 	var validateBasicHandler ValidateBasicHandler
-	err := k.resolver.Resolve(&validateBasicHandler, msg)
+	err := k.resolver.Resolve(&validateBasic, msg)
 	if err != nil {
 		return err
 	}   

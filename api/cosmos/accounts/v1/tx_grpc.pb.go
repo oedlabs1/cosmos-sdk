@@ -19,9 +19,8 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Msg_Init_FullMethodName          = "/cosmos.accounts.v1.Msg/Init"
-	Msg_Execute_FullMethodName       = "/cosmos.accounts.v1.Msg/Execute"
-	Msg_ExecuteBundle_FullMethodName = "/cosmos.accounts.v1.Msg/ExecuteBundle"
+	Msg_Init_FullMethodName    = "/cosmos.accounts.v1.Msg/Init"
+	Msg_Execute_FullMethodName = "/cosmos.accounts.v1.Msg/Execute"
 )
 
 // MsgClient is the client API for Msg service.
@@ -32,9 +31,6 @@ type MsgClient interface {
 	Init(ctx context.Context, in *MsgInit, opts ...grpc.CallOption) (*MsgInitResponse, error)
 	// Execute executes a message to the target account.
 	Execute(ctx context.Context, in *MsgExecute, opts ...grpc.CallOption) (*MsgExecuteResponse, error)
-	// ExecuteBundle pertains account abstraction, it is used by the bundler
-	// to execute multiple UserOperations in a single transaction message.
-	ExecuteBundle(ctx context.Context, in *MsgExecuteBundle, opts ...grpc.CallOption) (*MsgExecuteBundleResponse, error)
 }
 
 type msgClient struct {
@@ -63,15 +59,6 @@ func (c *msgClient) Execute(ctx context.Context, in *MsgExecute, opts ...grpc.Ca
 	return out, nil
 }
 
-func (c *msgClient) ExecuteBundle(ctx context.Context, in *MsgExecuteBundle, opts ...grpc.CallOption) (*MsgExecuteBundleResponse, error) {
-	out := new(MsgExecuteBundleResponse)
-	err := c.cc.Invoke(ctx, Msg_ExecuteBundle_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
@@ -80,9 +67,6 @@ type MsgServer interface {
 	Init(context.Context, *MsgInit) (*MsgInitResponse, error)
 	// Execute executes a message to the target account.
 	Execute(context.Context, *MsgExecute) (*MsgExecuteResponse, error)
-	// ExecuteBundle pertains account abstraction, it is used by the bundler
-	// to execute multiple UserOperations in a single transaction message.
-	ExecuteBundle(context.Context, *MsgExecuteBundle) (*MsgExecuteBundleResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -95,9 +79,6 @@ func (UnimplementedMsgServer) Init(context.Context, *MsgInit) (*MsgInitResponse,
 }
 func (UnimplementedMsgServer) Execute(context.Context, *MsgExecute) (*MsgExecuteResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Execute not implemented")
-}
-func (UnimplementedMsgServer) ExecuteBundle(context.Context, *MsgExecuteBundle) (*MsgExecuteBundleResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ExecuteBundle not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -148,24 +129,6 @@ func _Msg_Execute_Handler(srv interface{}, ctx context.Context, dec func(interfa
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_ExecuteBundle_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgExecuteBundle)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServer).ExecuteBundle(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Msg_ExecuteBundle_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).ExecuteBundle(ctx, req.(*MsgExecuteBundle))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -180,10 +143,6 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Execute",
 			Handler:    _Msg_Execute_Handler,
-		},
-		{
-			MethodName: "ExecuteBundle",
-			Handler:    _Msg_ExecuteBundle_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

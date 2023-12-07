@@ -19,18 +19,18 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/store"
 	storetypes "cosmossdk.io/store/types"
-	authzkeeper "cosmossdk.io/x/authz/keeper"
 	"cosmossdk.io/x/feegrant"
-	slashingtypes "cosmossdk.io/x/slashing/types"
-	stakingtypes "cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	simcli "github.com/cosmos/cosmos-sdk/x/simulation/client/cli"
+	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // SimAppChainID hardcoded chainID for simulation
@@ -76,9 +76,6 @@ func TestFullAppSimulation(t *testing.T) {
 	appOptions[server.FlagInvCheckPeriod] = simcli.FlagPeriodValue
 
 	app := NewSimApp(logger, db, nil, true, appOptions, fauxMerkleModeOpt, baseapp.SetChainID(SimAppChainID))
-	if !simcli.FlagSigverifyTxValue {
-		app.SetNotSigverifyTx()
-	}
 	require.Equal(t, "SimApp", app.Name())
 
 	// run randomized simulation
@@ -124,9 +121,6 @@ func TestAppImportExport(t *testing.T) {
 	appOptions[server.FlagInvCheckPeriod] = simcli.FlagPeriodValue
 
 	app := NewSimApp(logger, db, nil, true, appOptions, fauxMerkleModeOpt, baseapp.SetChainID(SimAppChainID))
-	if !simcli.FlagSigverifyTxValue {
-		app.SetNotSigverifyTx()
-	}
 	require.Equal(t, "SimApp", app.Name())
 
 	// Run randomized simulation
@@ -246,9 +240,6 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	appOptions[server.FlagInvCheckPeriod] = simcli.FlagPeriodValue
 
 	app := NewSimApp(logger, db, nil, true, appOptions, fauxMerkleModeOpt, baseapp.SetChainID(SimAppChainID))
-	if !simcli.FlagSigverifyTxValue {
-		app.SetNotSigverifyTx()
-	}
 	require.Equal(t, "SimApp", app.Name())
 
 	// Run randomized simulation
@@ -294,9 +285,6 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	}()
 
 	newApp := NewSimApp(log.NewNopLogger(), newDB, nil, true, appOptions, fauxMerkleModeOpt, baseapp.SetChainID(SimAppChainID))
-	if !simcli.FlagSigverifyTxValue {
-		newApp.SetNotSigverifyTx()
-	}
 	require.Equal(t, "SimApp", newApp.Name())
 
 	_, err = newApp.InitChain(&abci.RequestInitChain{
@@ -374,9 +362,6 @@ func TestAppStateDeterminism(t *testing.T) {
 
 			db := dbm.NewMemDB()
 			app := NewSimApp(logger, db, nil, true, appOptions, interBlockCacheOpt(), baseapp.SetChainID(SimAppChainID))
-			if !simcli.FlagSigverifyTxValue {
-				app.SetNotSigverifyTx()
-			}
 
 			fmt.Printf(
 				"running non-determinism simulation; seed %d: %d/%d, attempt: %d/%d\n",

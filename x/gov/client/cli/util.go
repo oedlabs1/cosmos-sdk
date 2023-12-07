@@ -8,12 +8,11 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
-	govutils "cosmossdk.io/x/gov/client/utils"
-	govv1 "cosmossdk.io/x/gov/types/v1"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	govutils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
+	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
 type legacyProposal struct {
@@ -132,14 +131,13 @@ func AddGovPropFlagsToCmd(cmd *cobra.Command) {
 	cmd.Flags().String(FlagMetadata, "", "The metadata to include with the governance proposal")
 	cmd.Flags().String(FlagTitle, "", "The title to put on the governance proposal")
 	cmd.Flags().String(FlagSummary, "", "The summary to include with the governance proposal")
-	cmd.Flags().Bool(FlagExpedited, false, "Whether to expedite the governance proposal")
 }
 
-// ReadGovPropCmdFlags parses a MsgSubmitProposal from the provided context and flags.
+// ReadGovPropFlags parses a MsgSubmitProposal from the provided context and flags.
 // Setting the messages is up to the caller.
 //
 // See also AddGovPropFlagsToCmd.
-func ReadGovPropCmdFlags(proposer string, flagSet *pflag.FlagSet) (*govv1.MsgSubmitProposal, error) {
+func ReadGovPropFlags(clientCtx client.Context, flagSet *pflag.FlagSet) (*govv1.MsgSubmitProposal, error) {
 	rv := &govv1.MsgSubmitProposal{}
 
 	deposit, err := flagSet.GetString(FlagDeposit)
@@ -168,21 +166,7 @@ func ReadGovPropCmdFlags(proposer string, flagSet *pflag.FlagSet) (*govv1.MsgSub
 		return nil, fmt.Errorf("could not read summary: %w", err)
 	}
 
-	rv.Expedited, err = flagSet.GetBool(FlagExpedited)
-	if err != nil {
-		return nil, fmt.Errorf("could not read expedited: %w", err)
-	}
-
-	rv.Proposer = proposer
+	rv.Proposer = clientCtx.GetFromAddress().String()
 
 	return rv, nil
-}
-
-// ReadGovPropFlags parses a MsgSubmitProposal from the provided context and flags.
-// Setting the messages is up to the caller.
-//
-// See also AddGovPropFlagsToCmd.
-// Deprecated: use ReadPropCmdFlags instead, as this depends on global bech32 prefixes.
-func ReadGovPropFlags(clientCtx client.Context, flagSet *pflag.FlagSet) (*govv1.MsgSubmitProposal, error) {
-	return ReadGovPropCmdFlags(clientCtx.GetFromAddress().String(), flagSet)
 }
