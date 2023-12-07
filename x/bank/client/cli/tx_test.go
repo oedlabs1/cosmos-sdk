@@ -10,6 +10,8 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	sdkmath "cosmossdk.io/math"
+	"cosmossdk.io/x/bank"
+	"cosmossdk.io/x/bank/client/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -20,8 +22,6 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	testutilmod "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	"github.com/cosmos/cosmos-sdk/x/bank"
-	"github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 )
 
 type CLITestSuite struct {
@@ -54,7 +54,7 @@ func (s *CLITestSuite) SetupSuite() {
 func (s *CLITestSuite) TestMultiSendTxCmd() {
 	accounts := testutil.CreateKeyringAccounts(s.T(), s.kr, 3)
 
-	cmd := cli.NewMultiSendTxCmd(addresscodec.NewBech32Codec("cosmos"))
+	cmd := cli.NewMultiSendTxCmd()
 	cmd.SetOutput(io.Discard)
 
 	extraArgs := []string{
