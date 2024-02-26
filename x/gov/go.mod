@@ -1,6 +1,6 @@
 module cosmossdk.io/x/gov
 
-go 1.21
+go 1.22.0
 
 require (
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.32.0-20230509103710-5e5b9fdd0180.1 // indirect
@@ -166,6 +166,13 @@ require (
 	nhooyr.io/websocket v1.8.6 // indirect
 	pgregory.net/rapid v1.1.0 // indirect
 	sigs.k8s.io/yaml v1.4.0 // indirect
+)
+
+require (
+	github.com/itsdevbear/comet-bls12-381 v0.0.0-20240226135442-10e4707bd0ca // indirect
+	github.com/klauspost/cpuid/v2 v2.2.4 // indirect
+	github.com/minio/sha256-simd v1.0.1 // indirect
+	github.com/supranational/blst v0.3.11 // indirect
 )
 
 replace github.com/cosmos/cosmos-sdk => ../../.

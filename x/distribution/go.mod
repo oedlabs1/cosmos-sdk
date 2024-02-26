@@ -1,6 +1,6 @@
 module cosmossdk.io/x/distribution
 
-go 1.21
+go 1.22.0
 
 require (
 	cosmossdk.io/api v0.7.3
@@ -28,6 +28,13 @@ require (
 	google.golang.org/genproto/googleapis/api v0.0.0-20240205150955-31a09d347014
 	google.golang.org/grpc v1.62.0
 	gotest.tools/v3 v3.5.1
+)
+
+require (
+	github.com/itsdevbear/comet-bls12-381 v0.0.0-20240226135442-10e4707bd0ca // indirect
+	github.com/klauspost/cpuid/v2 v2.2.4 // indirect
+	github.com/minio/sha256-simd v1.0.1 // indirect
+	github.com/supranational/blst v0.3.11 // indirect
 )
 
 require (
