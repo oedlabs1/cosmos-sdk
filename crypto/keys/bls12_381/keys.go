@@ -23,16 +23,21 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 // OTHER DEALINGS IN THE SOFTWARE.
 
-package bls
+package bls12_381
 
 import (
 	"bytes"
+	fmt "fmt"
 
 	"github.com/minio/sha256-simd"
 
+	errorsmod "cosmossdk.io/errors"
+
 	"github.com/cometbft/cometbft/crypto"
 	"github.com/cometbft/cometbft/crypto/tmhash"
+	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/itsdevbear/comet-bls12-381/bls/blst"
 	"github.com/itsdevbear/comet-bls12-381/bls/params"
@@ -45,6 +50,11 @@ const (
 	PubKeySize = 48
 	// KeyType is the string constant for the bls12_381 algorithm.
 	KeyType = "bls12_381"
+)
+
+var (
+	_ cryptotypes.PrivKey  = &PrivKey{}
+	_ codec.AminoMarshaler = &PrivKey{}
 )
 
 // -------------------------------------.
@@ -116,6 +126,33 @@ func (privKey PrivKey) Sign(digestBz []byte) ([]byte, error) {
 	return sig.Marshal(), nil
 }
 
+// MarshalAmino overrides Amino binary marshaling.
+func (privKey PrivKey) MarshalAmino() ([]byte, error) {
+	return privKey.Key, nil
+}
+
+// UnmarshalAmino overrides Amino binary marshaling.
+func (privKey *PrivKey) UnmarshalAmino(bz []byte) error {
+	if len(bz) != PrivKeySize {
+		return fmt.Errorf("invalid privkey size")
+	}
+	privKey.Key = bz
+
+	return nil
+}
+
+// MarshalAminoJSON overrides Amino JSON marshaling.
+func (privKey PrivKey) MarshalAminoJSON() ([]byte, error) {
+	// When we marshal to Amino JSON, we don't marshal the "key" field itself,
+	// just its contents (i.e. the key bytes).
+	return privKey.MarshalAmino()
+}
+
+// UnmarshalAminoJSON overrides Amino JSON marshaling.
+func (privKey *PrivKey) UnmarshalAminoJSON(bz []byte) error {
+	return privKey.UnmarshalAmino(bz)
+}
+
 // ===============================================================================================
 // Public Key
 // ===============================================================================================
@@ -129,7 +166,7 @@ var _ cryptotypes.PubKey = &PubKey{}
 
 // Address returns the address of the ECDSA public key.
 // The function will return an empty address if the public key is invalid.
-func (pubKey PubKey) Address() crypto.Address {
+func (pubKey *PubKey) Address() crypto.Address {
 	pk, _ := blst.PublicKeyFromBytes(pubKey.Key)
 	if len(pk.Marshal()) != PubKeySize {
 		panic("pubkey is incorrect size")
@@ -138,7 +175,7 @@ func (pubKey PubKey) Address() crypto.Address {
 	return crypto.Address(tmhash.SumTruncated(pubKey.Key))
 }
 
-func (pubKey PubKey) VerifySignature(msg, sig []byte) bool {
+func (pubKey *PubKey) VerifySignature(msg, sig []byte) bool {
 	if len(sig) != params.BLSSignatureLength {
 		return false
 	}
@@ -157,20 +194,47 @@ func (pubKey PubKey) VerifySignature(msg, sig []byte) bool {
 }
 
 // Bytes returns the pubkey byte format.
-func (pubKey PubKey) Bytes() []byte {
+func (pubKey *PubKey) Bytes() []byte {
 	return pubKey.Key
 }
 
-func (pubKey PubKey) String() string {
-	return string(pubKey.Bytes())
+func (pubKey *PubKey) String() string {
+	return fmt.Sprintf("PubKeyBLS12_381{%X}", pubKey.Key)
 }
 
 // Type returns eth_bls12_381.
-func (pubKey PubKey) Type() string {
+func (pubKey *PubKey) Type() string {
 	return KeyType
 }
 
 // Equals returns true if the pubkey type is the same and their bytes are deeply equal.
-func (pubKey PubKey) Equals(other cryptotypes.PubKey) bool {
+func (pubKey *PubKey) Equals(other cryptotypes.PubKey) bool {
 	return pubKey.Type() == other.Type() && bytes.Equal(pubKey.Bytes(), other.Bytes())
+}
+
+// MarshalAmino overrides Amino binary marshaling.
+func (pubKey *PubKey) MarshalAmino() ([]byte, error) {
+	return pubKey.Key, nil
+}
+
+// UnmarshalAmino overrides Amino binary marshaling.
+func (pubKey *PubKey) UnmarshalAmino(bz []byte) error {
+	if len(bz) != PubKeySize {
+		return errorsmod.Wrap(errors.ErrInvalidPubKey, "invalid pubkey size")
+	}
+	pubKey.Key = bz
+
+	return nil
+}
+
+// MarshalAminoJSON overrides Amino JSON marshaling.
+func (pubKey *PubKey) MarshalAminoJSON() ([]byte, error) {
+	// When we marshal to Amino JSON, we don't marshal the "key" field itself,
+	// just its contents (i.e. the key bytes).
+	return pubKey.MarshalAmino()
+}
+
+// UnmarshalAminoJSON overrides Amino JSON marshaling.
+func (pubKey *PubKey) UnmarshalAminoJSON(bz []byte) error {
+	return pubKey.UnmarshalAmino(bz)
 }
