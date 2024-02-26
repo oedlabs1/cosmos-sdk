@@ -6,7 +6,7 @@ import (
 	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 
 	"cosmossdk.io/errors"
-	bls "github.com/cosmos/cosmos-sdk/crypto/keys/bls"
+	bls12_381 "github.com/cosmos/cosmos-sdk/crypto/keys/bls12_381"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -25,7 +25,7 @@ func FromCmtProtoPublicKey(protoPk cmtprotocrypto.PublicKey) (cryptotypes.PubKey
 			Key: protoPk.Secp256K1,
 		}, nil
 	case *cmtprotocrypto.PublicKey_Bls12381:
-		return &bls.PubKey{
+		return &bls12_381.PubKey{
 			Key: protoPk.Bls12381,
 		}, nil
 	default:
@@ -48,7 +48,7 @@ func ToCmtProtoPublicKey(pk cryptotypes.PubKey) (cmtprotocrypto.PublicKey, error
 				Secp256K1: pk.Key,
 			},
 		}, nil
-	case *bls.PubKey:
+	case *bls12_381.PubKey:
 		return cmtprotocrypto.PublicKey{
 			Sum: &cmtprotocrypto.PublicKey_Bls12381{
 				Bls12381: pk.Key,

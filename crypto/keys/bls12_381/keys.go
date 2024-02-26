@@ -32,7 +32,6 @@ import (
 
 	"github.com/cometbft/cometbft/crypto"
 	"github.com/cometbft/cometbft/crypto/tmhash"
-	cmtjson "github.com/cometbft/cometbft/libs/json"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 
 	"github.com/itsdevbear/comet-bls12-381/bls/blst"
@@ -50,14 +49,9 @@ const (
 
 // -------------------------------------.
 const (
-	PrivKeyName = "tendermint/PrivKeyBLS12_381"
-	PubKeyName  = "tendermint/PubKeyBLS12_381"
+	PrivKeyName = "cometbft/PrivKeyBLS12_381"
+	PubKeyName  = "cometbft/PubKeyBLS12_381"
 )
-
-func init() {
-	cmtjson.RegisterType(PubKey{}, PubKeyName)
-	cmtjson.RegisterType(PrivKey{}, PrivKeyName)
-}
 
 // ===============================================================================================
 // Private Key
