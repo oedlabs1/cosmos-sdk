@@ -495,6 +495,12 @@ func (m *Manager) InitGenesis(ctx sdk.Context, genesisData map[string]json.RawMe
 					Secp256K1: v.PubKey,
 				},
 			}
+		case "bls12_381":
+			pubkey = cmtcryptoproto.PublicKey{
+				Sum: &cmtcryptoproto.PublicKey_Bls12381{
+					Bls12381: v.PubKey,
+				},
+			}
 		}
 
 		cometValidatorUpdates[i] = abci.ValidatorUpdate{
@@ -813,6 +819,12 @@ func (m *Manager) EndBlock(ctx sdk.Context) (sdk.EndBlock, error) {
 			pubkey = cmtcryptoproto.PublicKey{
 				Sum: &cmtcryptoproto.PublicKey_Secp256K1{
 					Secp256K1: v.PubKey,
+				},
+			}
+		case "bls12_381":
+			pubkey = cmtcryptoproto.PublicKey{
+				Sum: &cmtcryptoproto.PublicKey_Bls12381{
+					Bls12381: v.PubKey,
 				},
 			}
 		}
