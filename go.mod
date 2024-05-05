@@ -2,8 +2,6 @@ go 1.22.2
 
 module github.com/cosmos/cosmos-sdk
 
-replace github.com/cometbft/cometbft => github.com/berachain/cometbft v0.0.0-20240226150756-5d5016776ff4
-
 require (
 	cosmossdk.io/api v0.7.4
 	cosmossdk.io/collections v0.4.0
@@ -43,6 +41,7 @@ require (
 	github.com/hashicorp/golang-lru v1.0.2
 	github.com/hdevalence/ed25519consensus v0.2.0
 	github.com/huandu/skiplist v1.2.0
+	github.com/itsdevbear/comet-bls12-381 v0.0.0-20240226135442-10e4707bd0ca
 	github.com/magiconair/properties v1.8.7
 	github.com/mattn/go-isatty v0.0.20
 	github.com/mdp/qrterminal/v3 v3.2.0
@@ -135,7 +134,6 @@ require (
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-runewidth v0.0.14 // indirect
 	github.com/minio/highwayhash v1.0.2 // indirect
-	github.com/minio/sha256-simd v1.0.1 // indirect
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mtibben/percent v0.2.1 // indirect
