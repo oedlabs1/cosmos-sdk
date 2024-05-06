@@ -170,6 +170,8 @@ require (
 	go.opencensus.io v0.24.0 // indirect
 )
 
+require cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000
+
 require cosmossdk.io/x/accounts/defaults/lockup v0.0.0-20240417181816-5e7aae0db1f5 // indirect
 
 replace github.com/cosmos/cosmos-sdk => ../../.

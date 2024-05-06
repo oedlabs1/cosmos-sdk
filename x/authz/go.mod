@@ -169,12 +169,7 @@ require (
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
 
-require (
-	github.com/itsdevbear/comet-bls12-381 v0.0.0-20240226135442-10e4707bd0ca // indirect
-	github.com/klauspost/cpuid/v2 v2.2.4 // indirect
-	github.com/minio/sha256-simd v1.0.1 // indirect
-	github.com/supranational/blst v0.3.11 // indirect
-)
+require cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000 // indirect
 
 replace github.com/cosmos/cosmos-sdk => ../../.
 
