@@ -22,7 +22,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/debug"
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -74,11 +73,9 @@ func (t *temporaryTxDecoder[T]) DecodeJSON(bz []byte) (T, error) {
 }
 
 func newApp[AppT serverv2.AppI[T], T transaction.Tx](
-	logger log.Logger,
-	viper *viper.Viper,
+	logger log.Logger, viper *viper.Viper,
 ) AppT {
-	sa := simapp.NewSimApp[T](logger, viper)
-	return serverv2.AppI[T](sa).(AppT)
+	return serverv2.AppI[T](simapp.NewSimApp[T](logger, viper)).(AppT)
 }
 
 func initRootCmd[AppT serverv2.AppI[T], T transaction.Tx](
@@ -107,7 +104,7 @@ func initRootCmd[AppT serverv2.AppI[T], T transaction.Tx](
 		rootCmd,
 		newApp,
 		logger,
-		cometbft.New[AppT, T](&temporaryTxDecoder[T]{txConfig}),
+		cometbft.New[AppT, T](&temporaryTxDecoder[T]{txConfig}, cometbft.DefaultServerOptions[T]()),
 		grpc.New[AppT, T](),
 	); err != nil {
 		panic(err)
@@ -208,12 +205,6 @@ func appExport[T transaction.Tx](
 	viper *viper.Viper,
 	modulesToExport []string,
 ) (servertypes.ExportedApp, error) {
-	// this check is necessary as we use the flag in x/upgrade.
-	// we can exit more gracefully by checking the flag here.
-	homePath, ok := viper.Get(flags.FlagHome).(string)
-	if !ok || homePath == "" {
-		return servertypes.ExportedApp{}, errors.New("application home not set")
-	}
 	// overwrite the FlagInvCheckPeriod
 	viper.Set(server.FlagInvCheckPeriod, 1)
 
