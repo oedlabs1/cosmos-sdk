@@ -160,7 +160,7 @@ func parseRangeInstruction[K any](prefix []byte, keyCodec codec.KeyCodec[K], r R
 			return nil, nil, 0, err
 		}
 	} else {
-		endBytes = nextBytesPrefixKey(prefix)
+		endBytes = NextBytesPrefixKey(prefix)
 	}
 	if bytes.Compare(startBytes, endBytes) == 1 {
 		return nil, nil, 0, ErrInvalidIterator
@@ -321,7 +321,7 @@ func encodeRangeBound[T any](prefix []byte, keyCodec codec.KeyCodec[T], bound *R
 	case rangeKeyNext:
 		return nextBytesKey(key), nil
 	case rangeKeyPrefixEnd:
-		return nextBytesPrefixKey(key), nil
+		return NextBytesPrefixKey(key), nil
 	default:
 		panic("undefined bound kind")
 	}
@@ -332,10 +332,10 @@ func nextBytesKey(b []byte) []byte {
 	return append(b, 0)
 }
 
-// nextBytesPrefixKey returns the []byte that would end a
+// NextBytesPrefixKey returns the []byte that would end a
 // range query for all []byte with a certain prefix
 // Deals with last byte of prefix being FF without overflowing
-func nextBytesPrefixKey(prefix []byte) []byte {
+func NextBytesPrefixKey(prefix []byte) []byte {
 	if len(prefix) == 0 {
 		return nil
 	}
