@@ -31,7 +31,7 @@ import (
 var _ abci.Application = (*Consensus[transaction.Tx])(nil)
 
 type Consensus[T transaction.Tx] struct {
-	app             *appmanager.AppManager[T]
+	app             appmanager.AppManager[T]
 	cfg             Config
 	store           types.Store
 	logger          log.Logger
@@ -54,7 +54,7 @@ type Consensus[T transaction.Tx] struct {
 }
 
 func NewConsensus[T transaction.Tx](
-	app *appmanager.AppManager[T],
+	app appmanager.AppManager[T],
 	mp mempool.Mempool[T],
 	store types.Store,
 	cfg Config,
