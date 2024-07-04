@@ -30,7 +30,7 @@ require (
 	cosmossdk.io/store/v2 v2.0.0-00010101000000-000000000000
 	cosmossdk.io/x/tx v0.13.3
 	github.com/cosmos/gogoproto v1.5.0
-	golang.org/x/exp v0.0.0-20240506185415-9bf2ced13842
+	golang.org/x/exp v0.0.0-20240613232115-7f521ea00fb8
 	google.golang.org/grpc v1.64.0
 	google.golang.org/protobuf v1.34.2
 )
