@@ -179,11 +179,10 @@ func ProvideModuleManager[T transaction.Tx](
 }
 
 // ProvideEnvironment provides the environment for keeper modules, while maintaining backward compatibility and provide services directly as well.
-func ProvideEnvironment[T transaction.Tx](logger log.Logger, config *runtimev2.Module, key depinject.ModuleKey) (
-	appBuilder *AppBuilder[T],
-	env appmodulev2.Environment,
-	kvss store.KVStoreService,
-	mss store.MemoryStoreService,
+func ProvideEnvironment[T transaction.Tx](logger log.Logger, config *runtimev2.Module, key depinject.ModuleKey, appBuilder *AppBuilder[T]) (
+	appmodulev2.Environment,
+	store.KVStoreService,
+	store.MemoryStoreService,
 ) {
 	var (
 		kvService    store.KVStoreService     = failingStoreService{}
@@ -208,7 +207,7 @@ func ProvideEnvironment[T transaction.Tx](logger log.Logger, config *runtimev2.M
 		memKvService = stf.NewMemoryStoreService([]byte(memStoreKey))
 	}
 
-	env = appmodulev2.Environment{
+	env := appmodulev2.Environment{
 		Logger:             logger,
 		BranchService:      stf.BranchService{},
 		EventService:       stf.NewEventService(),
@@ -221,7 +220,7 @@ func ProvideEnvironment[T transaction.Tx](logger log.Logger, config *runtimev2.M
 		MemStoreService:    memKvService,
 	}
 
-	return appBuilder, env, kvService, memKvService
+	return env, kvService, memKvService
 }
 
 func registerStoreKey[T transaction.Tx](wrapper *AppBuilder[T], key string) {
