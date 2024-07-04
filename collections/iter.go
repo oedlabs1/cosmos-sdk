@@ -197,10 +197,10 @@ func newIterator[K, V any](ctx context.Context, start, end []byte, order Order, 
 	}
 
 	return Iterator[K, V]{
-		kc:           m.kc,
-		vc:           m.vc,
-		iter:         iter,
-		prefixLength: len(m.prefix),
+		KeyCodec:     m.kc,
+		ValueCodec:   m.vc,
+		Iter:         iter,
+		PrefixLength: len(m.prefix),
 	}, nil
 }
 
@@ -209,31 +209,31 @@ func newIterator[K, V any](ctx context.Context, start, end []byte, order Order, 
 // it assumes all the keys and values contained within the storetypes.Iterator
 // range are the same.
 type Iterator[K, V any] struct {
-	kc codec.KeyCodec[K]
-	vc codec.ValueCodec[V]
+	KeyCodec   codec.KeyCodec[K]
+	ValueCodec codec.ValueCodec[V]
 
-	iter store.Iterator
+	Iter store.Iterator
 
-	prefixLength int // prefixLength refers to the bytes provided by Prefix.Bytes, not Ranger.RangeValues() prefix.
+	PrefixLength int // prefixLength refers to the bytes provided by Prefix.Bytes, not Ranger.RangeValues() prefix.
 }
 
 // Value returns the current iterator value bytes decoded.
 func (i Iterator[K, V]) Value() (V, error) {
-	return i.vc.Decode(i.iter.Value())
+	return i.ValueCodec.Decode(i.Iter.Value())
 }
 
 // Key returns the current storetypes.Iterator decoded key.
 func (i Iterator[K, V]) Key() (K, error) {
-	bytesKey := i.iter.Key()[i.prefixLength:] // strip prefix namespace
+	bytesKey := i.Iter.Key()[i.PrefixLength:] // strip prefix namespace
 
-	read, key, err := i.kc.Decode(bytesKey)
+	read, key, err := i.KeyCodec.Decode(bytesKey)
 	if err != nil {
 		var k K
 		return k, err
 	}
 	if read != len(bytesKey) {
 		var k K
-		return k, fmt.Errorf("%w: key decoder didn't fully consume the key: %T %x %d", ErrEncoding, i.kc, bytesKey, read)
+		return k, fmt.Errorf("%w: key decoder didn't fully consume the key: %T %x %d", ErrEncoding, i.KeyCodec, bytesKey, read)
 	}
 	return key, nil
 }
@@ -243,7 +243,7 @@ func (i Iterator[K, V]) Values() ([]V, error) {
 	defer i.Close()
 
 	var values []V
-	for ; i.iter.Valid(); i.iter.Next() {
+	for ; i.Iter.Valid(); i.Iter.Next() {
 		value, err := i.Value()
 		if err != nil {
 			return nil, err
@@ -258,7 +258,7 @@ func (i Iterator[K, V]) Keys() ([]K, error) {
 	defer i.Close()
 
 	var keys []K
-	for ; i.iter.Valid(); i.iter.Next() {
+	for ; i.Iter.Valid(); i.Iter.Next() {
 		key, err := i.Key()
 		if err != nil {
 			return nil, err
@@ -288,7 +288,7 @@ func (i Iterator[K, V]) KeyValues() ([]KeyValue[K, V], error) {
 	defer i.Close()
 
 	var kvs []KeyValue[K, V]
-	for ; i.iter.Valid(); i.iter.Next() {
+	for ; i.Iter.Valid(); i.Iter.Next() {
 		kv, err := i.KeyValue()
 		if err != nil {
 			return nil, err
@@ -299,9 +299,9 @@ func (i Iterator[K, V]) KeyValues() ([]KeyValue[K, V], error) {
 	return kvs, nil
 }
 
-func (i Iterator[K, V]) Close() error { return i.iter.Close() }
-func (i Iterator[K, V]) Next()        { i.iter.Next() }
-func (i Iterator[K, V]) Valid() bool  { return i.iter.Valid() }
+func (i Iterator[K, V]) Close() error { return i.Iter.Close() }
+func (i Iterator[K, V]) Next()        { i.Iter.Next() }
+func (i Iterator[K, V]) Valid() bool  { return i.Iter.Valid() }
 
 // KeyValue represent a Key and Value pair of an iteration.
 type KeyValue[K, V any] struct {

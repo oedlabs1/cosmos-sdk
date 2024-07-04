@@ -238,10 +238,10 @@ func (m Map[K, V]) IterateRaw(ctx context.Context, start, end []byte, order Orde
 	}
 
 	return Iterator[K, V]{
-		kc:           m.kc,
-		vc:           m.vc,
-		iter:         storeIter,
-		prefixLength: len(m.prefix),
+		KeyCodec:     m.kc,
+		ValueCodec:   m.vc,
+		Iter:         storeIter,
+		PrefixLength: len(m.prefix),
 	}, nil
 }
 
