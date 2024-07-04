@@ -50,5 +50,5 @@ type AppManager[T transaction.Tx] interface {
 		state corestore.ReaderMap,
 		request transaction.Msg,
 	) (transaction.Msg, error)
-	MakeContext(ctx context.Context) context.Context
+	MakeContext(context.Context, transaction.ExecMode) context.Context
 }

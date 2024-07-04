@@ -150,8 +150,7 @@ func (a appManager[T]) QueryWithState(
 	return a.stf.Query(ctx, state, a.config.QueryGasLimit, request)
 }
 
-func (a appManager[T]) MakeContext(ctx context.Context) context.Context {
-	execMode := transaction.ExecModeSimulate
+func (a appManager[T]) MakeContext(ctx context.Context, execMode transaction.ExecMode) context.Context {
 	_, currentState, err := a.db.StateLatest()
 	if err != nil {
 		panic(err)
