@@ -35,7 +35,7 @@ type Consensus[T transaction.Tx] struct {
 	// legacy support for gRPC
 	grpcQueryDecoders map[string]func(requestBytes []byte) (gogoproto.Message, error)
 
-	app             *appmanager.AppManager[T]
+	app             appmanager.AppManager[T]
 	cfg             Config
 	store           types.Store
 	logger          log.Logger
