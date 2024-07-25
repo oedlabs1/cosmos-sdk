@@ -35,11 +35,11 @@ func Execute(rootCmd *cobra.Command, envPrefix, defaultHome string) error {
 
 // AddCommands add the server commands to the root command
 // It configure the config handling and the logger handling
-func AddCommands[T transaction.Tx](
+func AddCommands[AppT AppI[T], T transaction.Tx](
 	rootCmd *cobra.Command,
-	newApp AppCreator[T],
+	newApp AppCreator[AppT, T],
 	logger log.Logger,
-	components ...ServerComponent[T],
+	components ...ServerComponent[AppT, T],
 ) error {
 	if len(components) == 0 {
 		return errors.New("no components provided")
@@ -96,9 +96,9 @@ func AddCommands[T transaction.Tx](
 }
 
 // createStartCommand creates the start command for the application.
-func createStartCommand[T transaction.Tx](
-	server *Server[T],
-	newApp AppCreator[T],
+func createStartCommand[AppT AppI[T], T transaction.Tx](
+	server *Server[AppT, T],
+	newApp AppCreator[AppT, T],
 ) *cobra.Command {
 	flags := server.StartFlags()
 
@@ -146,7 +146,7 @@ func createStartCommand[T transaction.Tx](
 }
 
 // configHandle writes the default config to the home directory if it does not exist and sets the server context
-func configHandle[T transaction.Tx](s *Server[T], cmd *cobra.Command) error {
+func configHandle[AppT AppI[T], T transaction.Tx](s *Server[AppT, T], cmd *cobra.Command) error {
 	home, err := cmd.Flags().GetString(FlagHome)
 	if err != nil {
 		return err
