@@ -34,15 +34,14 @@ var _ abci.Application = (*Consensus[transaction.Tx])(nil)
 type Consensus[T transaction.Tx] struct {
 	// legacy support for gRPC
 	grpcQueryDecoders map[string]func(requestBytes []byte) (gogoproto.Message, error)
-
-	app             appmanager.AppManager[T]
-	cfg             Config
-	store           types.Store
-	logger          log.Logger
-	txCodec         transaction.Codec[T]
-	streaming       streaming.Manager
-	snapshotManager *snapshots.Manager
-	mempool         mempool.Mempool[T]
+	app               *appmanager.AppManager[T]
+	cfg               Config
+	store             types.Store
+	logger            log.Logger
+	txCodec           transaction.Codec[T]
+	streaming         streaming.Manager
+	snapshotManager   *snapshots.Manager
+	mempool           mempool.Mempool[T]
 
 	// this is only available after this node has committed a block (in FinalizeBlock),
 	// otherwise it will be empty and we will need to query the app for the last
@@ -58,7 +57,7 @@ type Consensus[T transaction.Tx] struct {
 }
 
 func NewConsensus[T transaction.Tx](
-	app appmanager.AppManager[T],
+	app *appmanager.AppManager[T],
 	mp mempool.Mempool[T],
 	grpcQueryDecoders map[string]func(requestBytes []byte) (gogoproto.Message, error),
 	store types.Store,
