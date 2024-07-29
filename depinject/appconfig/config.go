@@ -1,11 +1,11 @@
 package appconfig
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"strings"
 
-	"github.com/cosmos/cosmos-proto/anyutil"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/encoding/protojson"
 	protov2 "google.golang.org/protobuf/proto"
@@ -52,13 +52,16 @@ func LoadYAML(bz []byte) depinject.Config {
 }
 
 // WrapAny marshals a proto message into a proto Any instance
-func WrapAny(config protoreflect.ProtoMessage) *anypb.Any {
-	cfg, err := anyutil.New(config)
+func WrapAny(config gogoproto.Message) *anypb.Any {
+	pbz, err := gogoproto.Marshal(config)
 	if err != nil {
 		panic(err)
 	}
 
-	return cfg
+	return &anypb.Any{
+		TypeUrl: "/" + gogoproto.MessageName(config),
+		Value:   pbz,
+	}
 }
 
 // Compose composes an app config into a container option by resolving
@@ -93,7 +96,7 @@ func Compose(appConfig gogoproto.Message) depinject.Config {
 
 	for _, module := range appConfigConcrete.Modules {
 		if module.Name == "" {
-			return depinject.Error(fmt.Errorf("module is missing name"))
+			return depinject.Error(errors.New("module is missing name"))
 		}
 
 		if module.Config == nil {
