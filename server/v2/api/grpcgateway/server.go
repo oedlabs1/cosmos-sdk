@@ -18,10 +18,7 @@ import (
 	serverv2 "cosmossdk.io/server/v2"
 )
 
-var _ serverv2.ServerComponent[
-	serverv2.AppI[transaction.Tx],
-	transaction.Tx,
-] = (*GRPCGatewayServer[transaction.Tx])(nil)
+var _ serverv2.ServerComponent[transaction.Tx] = (*GRPCGatewayServer[transaction.Tx])(nil)
 
 const (
 	// GRPCBlockHeightHeader is the gRPC header for block height.
