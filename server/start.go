@@ -371,7 +371,7 @@ func startCmtNode(
 	}
 	pvf := pvm.LoadOrGenFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile())
 	cmtApp := NewCometABCIWrapper(app)
-	tmNode, err = nodeNewNode(
+	tmNode, err = node.NewNode(
 		ctx,
 		cfg,
 		pvf,
