@@ -367,11 +367,11 @@ func startCmtNode(
 ) (tmNode *node.Node, cleanupFn func(), err error) {
 	nodeKey, err := p2p.LoadOrGenNodeKey(cfg.NodeKeyFile())
 	if err != nil {
-		return nil, cleqanupFn, err
+		return nil, cleanupFn, err
 	}
 	pvf := pvm.LoadOrGenFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile())
 	cmtApp := NewCometABCIWrapper(app)
-	tmNode, err = nodeqNewNode(
+	tmNode, err = nodeNewNode(
 		ctx,
 		cfg,
 		pvf,
