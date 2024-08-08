@@ -46,7 +46,7 @@ require (
 	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect
 	github.com/cockroachdb/pebble v1.1.1 // indirect
 	github.com/cockroachdb/redact v1.1.5 // indirect
-	github.com/cometbft/cometbft v1.0.0-rc1.0.20240806094948-2c4293ef36c4 // indirect
+	github.com/cometbft/cometbft v1.0.0-rc1.0.20240805134408-314422469051 // indirect
 	github.com/cometbft/cometbft-db v0.13.0 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/cosmos-db v1.0.2 // indirect

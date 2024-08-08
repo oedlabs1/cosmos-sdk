@@ -19,7 +19,7 @@ require (
 	cosmossdk.io/x/mint v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000
 	github.com/cockroachdb/apd/v2 v2.0.2
-	github.com/cometbft/cometbft v1.0.0-rc1.0.20240806094948-2c4293ef36c4
+	github.com/cometbft/cometbft v1.0.0-rc1.0.20240805134408-314422469051
 	github.com/cometbft/cometbft/api v1.0.0-rc.1
 	github.com/cosmos/cosmos-db v1.0.2
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5

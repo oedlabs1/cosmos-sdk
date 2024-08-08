@@ -18,7 +18,7 @@ require (
 	cosmossdk.io/x/protocolpool v0.0.0-20230925135524-a1bc045b3190
 	cosmossdk.io/x/tx v0.13.3
 	cosmossdk.io/x/upgrade v0.0.0-20230613133644-0a778132a60f
-	github.com/cometbft/cometbft v1.0.0-rc1.0.20240806094948-2c4293ef36c4
+	github.com/cometbft/cometbft v1.0.0-rc1.0.20240805134408-314422469051
 	github.com/cosmos/cosmos-db v1.0.2
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	// this version is not used as it is always replaced by the latest Cosmos SDK version

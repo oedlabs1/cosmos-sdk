@@ -11,7 +11,7 @@ require (
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/math v1.3.0
 	cosmossdk.io/store v1.1.1-0.20240418092142-896cdf1971bc
-	github.com/cometbft/cometbft v1.0.0-rc1.0.20240806094948-2c4293ef36c4
+	github.com/cometbft/cometbft v1.0.0-rc1.0.20240805134408-314422469051
 	github.com/cometbft/cometbft/api v1.0.0-rc.1
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/cosmos-sdk v0.53.0

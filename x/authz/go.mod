@@ -13,7 +13,7 @@ require (
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/tx v0.13.3
 	github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
-	github.com/cometbft/cometbft v1.0.0-rc1.0.20240806094948-2c4293ef36c4
+	github.com/cometbft/cometbft v1.0.0-rc1.0.20240805134408-314422469051
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/cosmos-sdk v0.53.0
 	github.com/cosmos/gogoproto v1.5.0
