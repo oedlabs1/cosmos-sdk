@@ -529,7 +529,7 @@ func startGrpcServer(
 	// g.Go(func() error {
 	// 	return servergrpc.StartGRPCServer(ctx, svrCtx.Logger.With("module", "grpc-server"), config, grpcSrv)
 	// })
-	return grpcSrv, clientCtx, nil
+	return &grpc.Server{}, clientCtx, nil
 }
 
 func startAPIServer(
