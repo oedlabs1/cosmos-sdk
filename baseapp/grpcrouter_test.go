@@ -112,7 +112,7 @@ func TestRegisterQueryServiceTwice(t *testing.T) {
 
 	// First time registering service shouldn't panic.
 	require.NotPanics(t, func() {
-		testdata.RegisterQueryServer(
+		testdata.RegisterQueryServer
 			app.GRPCQueryRouter(),
 			testdata.QueryImpl{},
 		)
