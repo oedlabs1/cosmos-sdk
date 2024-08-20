@@ -371,11 +371,15 @@ func startCmtNode(
 		return nil, cleanupFn, err
 	}
 
+	val, err := pvm.LoadOrGenFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile(), nil)
+	if err != nil {
+		return nil, cleanupFn, err
+	}
 	cmtApp := NewCometABCIWrapper(app)
 	tmNode, err = node.NewNode(
 		ctx,
 		cfg,
-		pvm.LoadOrGenFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile()),
+		val,
 		nodeKey,
 		proxy.NewLocalClientCreator(cmtApp),
 		getGenDocProvider(cfg),
@@ -793,7 +797,10 @@ func testnetify[T types.Application](ctx *Context, testnetAppCreator types.AppCr
 	defer blockStore.Close()
 	defer stateDB.Close()
 
-	privValidator := pvm.LoadOrGenFilePV(config.PrivValidatorKeyFile(), config.PrivValidatorStateFile())
+	privValidator, err := pvm.LoadOrGenFilePV(config.PrivValidatorKeyFile(), config.PrivValidatorStateFile(), nil)
+	if err != nil {
+		return nil, err
+	}
 	userPubKey, err := privValidator.GetPubKey()
 	if err != nil {
 		return nil, err

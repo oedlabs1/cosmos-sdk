@@ -240,6 +240,7 @@ require (
 
 // SimApp on main always tests the latest extracted SDK modules importing the sdk
 replace (
+github.com/cosmos-sdk/cosmos-sdk => ../.
 	cosmossdk.io/api => ../api
 	cosmossdk.io/client/v2 => ../client/v2
 	cosmossdk.io/collections => ../collections
