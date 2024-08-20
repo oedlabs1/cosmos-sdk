@@ -338,15 +338,15 @@ func startInProcess[T types.Application](svrCtx *Context, svrCfg serverconfig.Co
 		}
 	}
 
-	grpcSrv, clientCtx, err := startGrpcServer(ctx, g, svrCfg.GRPC, clientCtx, svrCtx, app)
-	if err != nil {
-		return err
-	}
+	// grpcSrv, clientCtx, err := startGrpcServer(ctx, g, svrCfg.GRPC, clientCtx, svrCtx, app)
+	// if err != nil {
+	// 	return err
+	// }
 
-	err = startAPIServer(ctx, g, svrCfg, clientCtx, svrCtx, app, cmtCfg.RootDir, grpcSrv, metrics)
-	if err != nil {
-		return err
-	}
+	// err = startAPIServer(ctx, g, svrCfg, clientCtx, svrCtx, app, cmtCfg.RootDir, grpcSrv, metrics)
+	// if err != nil {
+	// 	return err
+	// }
 
 	if opts.PostSetup != nil {
 		if err := opts.PostSetup(app, svrCtx, clientCtx, ctx, g); err != nil {
