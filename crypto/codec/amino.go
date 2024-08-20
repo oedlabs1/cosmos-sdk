@@ -1,8 +1,6 @@
 package codec
 
 import (
-	"github.com/cometbft/cometbft/crypto/sr25519"
-
 	"cosmossdk.io/core/legacy"
 
 	bls12_381 "github.com/cosmos/cosmos-sdk/crypto/keys/bls12_381"
@@ -16,8 +14,6 @@ import (
 // codec.
 func RegisterCrypto(cdc legacy.Amino) {
 	cdc.RegisterInterface((*cryptotypes.PubKey)(nil), nil)
-	cdc.RegisterConcrete(sr25519.PubKey{},
-		sr25519.PubKeyName)
 	cdc.RegisterConcrete(&ed25519.PubKey{},
 		ed25519.PubKeyName)
 	cdc.RegisterConcrete(&secp256k1.PubKey{},
@@ -27,8 +23,6 @@ func RegisterCrypto(cdc legacy.Amino) {
 		kmultisig.PubKeyAminoRoute)
 
 	cdc.RegisterInterface((*cryptotypes.PrivKey)(nil), nil)
-	cdc.RegisterConcrete(sr25519.PrivKey{},
-		sr25519.PrivKeyName)
 	cdc.RegisterConcrete(&ed25519.PrivKey{},
 		ed25519.PrivKeyName)
 	cdc.RegisterConcrete(&secp256k1.PrivKey{},

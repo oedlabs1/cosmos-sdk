@@ -22,8 +22,6 @@ const (
 	// Bls12_381Type represents the Bls12_381Type signature system.
 	// It is currently not supported for end-user keys (wallets/ledgers).
 	Bls12_381Type = PubKeyType("bls12_381")
-	// Sr25519Type represents the Sr25519Type signature system.
-	Sr25519Type = PubKeyType("sr25519")
 )
 
 // Secp256k1 uses the Bitcoin secp256k1 ECDSA parameters.

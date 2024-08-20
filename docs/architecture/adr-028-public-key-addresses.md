@@ -72,7 +72,7 @@ Using Bech32 for string encoding gives us support for checksum error codes and h
 
 We define the following account types, for which we define the address function:
 
-1. simple accounts: represented by a regular public key (ie: secp256k1, sr25519)
+1. simple accounts: represented by a regular public key (ie: secp256k1, ed25519)
 2. naive multisig: accounts composed by other addressable objects (ie: naive multisig)
 3. composed accounts with a native address key (ie: bls, group module accounts)
 4. module accounts: basically any accounts which cannot sign transactions and which are managed internally by modules
@@ -245,14 +245,14 @@ Since all Cosmos SDK account types are serialized in the state, we propose to us
 Example: all public key types have a unique protobuf message type similar to:
 
 ```protobuf
-package cosmos.crypto.sr25519;
+package cosmos.crypto.ed25519;
 
 message PubKey {
 	bytes key = 1;
 }
 ```
 
-All protobuf messages have unique fully qualified names, in this example `cosmos.crypto.sr25519.PubKey`.
+All protobuf messages have unique fully qualified names, in this example `cosmos.crypto.ed25519.PubKey`.
 These names are derived directly from .proto files in a standardized way and used
 in other places such as the type URL in `Any`s. We can easily obtain the name using
 `proto.MessageName(msg)`.
